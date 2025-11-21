@@ -1,0 +1,5 @@
+{
+  "name": "Skate School Manager",
+  "description": "A comprehensive management system for a Skate School, featuring dashboards for admins and teachers, attendance tracking, class scheduling, and detailed reporting.",
+  "requestFramePermissions": []
+}
