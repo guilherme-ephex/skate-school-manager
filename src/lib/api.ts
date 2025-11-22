@@ -82,6 +82,21 @@ export const api = {
         return data as Class;
     },
 
+    updateClassSchedule: async (classId: string, scheduleData: { days: string[]; time: string; location: string }) => {
+        const { data, error } = await supabase
+            .from('classes')
+            .update({
+                days: scheduleData.days,
+                time: scheduleData.time,
+                location: scheduleData.location
+            })
+            .eq('id', classId)
+            .select()
+            .single();
+        if (error) throw error;
+        return data as Class;
+    },
+
     // Enrollments
     enrollStudent: async (studentId: string, classId: string) => {
         const { data, error } = await supabase
@@ -150,6 +165,44 @@ export const api = {
             .order('created_at', { ascending: false });
         if (error) throw error;
         return data as Notice[];
+    },
+
+    getAllNotices: async () => {
+        const { data, error } = await supabase
+            .from('notices')
+            .select('*')
+            .order('created_at', { ascending: false });
+        if (error) throw error;
+        return data as Notice[];
+    },
+
+    createNotice: async (noticeData: Partial<Notice>) => {
+        const { data, error } = await supabase
+            .from('notices')
+            .insert(noticeData)
+            .select()
+            .single();
+        if (error) throw error;
+        return data as Notice;
+    },
+
+    updateNotice: async (noticeId: string, noticeData: Partial<Notice>) => {
+        const { data, error } = await supabase
+            .from('notices')
+            .update(noticeData)
+            .eq('id', noticeId)
+            .select()
+            .single();
+        if (error) throw error;
+        return data as Notice;
+    },
+
+    deleteNotice: async (noticeId: string) => {
+        const { error } = await supabase
+            .from('notices')
+            .delete()
+            .eq('id', noticeId);
+        if (error) throw error;
     },
 
     getTeacherClasses: async (teacherId: string) => {

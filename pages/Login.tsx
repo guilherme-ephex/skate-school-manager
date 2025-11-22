@@ -64,7 +64,7 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#1A2B4C] flex items-center justify-center p-4">
+    <div className="min-h-screen w-full bg-[#1A2B4C] dark:bg-background-dark flex items-center justify-center p-4 transition-colors">
       <div className="w-full max-w-md flex flex-col items-center">
         <div className="flex items-center gap-3 mb-8">
           <span className="material-symbols-outlined text-white text-5xl">skateboarding</span>
@@ -77,7 +77,7 @@ export const Login: React.FC = () => {
 
         <div className="w-full bg-white/5 backdrop-blur-sm rounded-xl p-6 sm:p-8 shadow-2xl border border-white/10">
           {/* Google Login - Placeholder for now */}
-          <button className="flex items-center justify-center w-full bg-white text-gray-900 h-12 rounded-lg text-sm font-bold hover:bg-gray-100 transition-colors mb-6 gap-2 opacity-50 cursor-not-allowed" disabled>
+          <button className="flex items-center justify-center w-full bg-white text-gray-900 h-12 rounded-lg text-sm font-bold hover:bg-gray-100 dark:bg-gray-700 transition-colors mb-6 gap-2 opacity-50 cursor-not-allowed" disabled>
             <img
               src="https://www.svgrepo.com/show/475656/google-color.svg"
               alt="Google"
@@ -105,7 +105,7 @@ export const Login: React.FC = () => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-white rounded-lg border-none h-12 px-4 focus:ring-2 focus:ring-[#0f3c5c]"
+                className="w-full bg-white text-gray-900 rounded-lg border-none h-12 px-4 focus:ring-2 focus:ring-[#0f3c5c]"
                 placeholder="seuemail@exemplo.com"
                 required
               />
@@ -117,7 +117,7 @@ export const Login: React.FC = () => {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-white rounded-lg border-none h-12 px-4 focus:ring-2 focus:ring-[#0f3c5c]"
+                  className="w-full bg-white text-gray-900 rounded-lg border-none h-12 px-4 focus:ring-2 focus:ring-[#0f3c5c]"
                   placeholder="********"
                   required
                 />

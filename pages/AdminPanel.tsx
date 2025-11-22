@@ -189,7 +189,7 @@ export const AdminPanel: React.FC = () => {
             case 'INSERT': return 'bg-green-100 text-green-700';
             case 'UPDATE': return 'bg-blue-100 text-blue-700';
             case 'DELETE': return 'bg-red-100 text-red-700';
-            default: return 'bg-gray-100 text-gray-700';
+            default: return 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-white';
         }
     };
 
@@ -257,17 +257,17 @@ export const AdminPanel: React.FC = () => {
     return (
         <div className="max-w-7xl mx-auto pb-10">
             <div className="mb-8">
-                <h1 className="text-3xl font-black text-gray-800">Painel de Administração</h1>
-                <p className="text-gray-500">Gerencie usuários e visualize logs de auditoria do sistema.</p>
+                <h1 className="text-3xl font-black text-gray-800 dark:text-white">Painel de Administração</h1>
+                <p className="text-gray-500 dark:text-gray-300">Gerencie usuários e visualize logs de auditoria do sistema.</p>
             </div>
 
             {/* Tabs */}
-            <div className="flex gap-8 border-b border-gray-200 mb-8">
+            <div className="flex gap-8 border-b border-gray-200 dark:border-gray-700 mb-8">
                 <button
                     onClick={() => setActiveTab('users')}
                     className={`pb-4 px-2 font-bold flex items-center gap-2 transition-colors ${activeTab === 'users'
                         ? 'text-primary border-b-2 border-primary'
-                        : 'text-gray-500 hover:text-gray-700'
+                        : 'text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:text-white'
                         }`}
                 >
                     <span className="material-symbols-outlined">group</span>
@@ -277,7 +277,7 @@ export const AdminPanel: React.FC = () => {
                     onClick={() => setActiveTab('audit')}
                     className={`pb-4 px-2 font-bold flex items-center gap-2 transition-colors ${activeTab === 'audit'
                         ? 'text-primary border-b-2 border-primary'
-                        : 'text-gray-500 hover:text-gray-700'
+                        : 'text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:text-white'
                         }`}
                 >
                     <span className="material-symbols-outlined">history</span>
@@ -287,7 +287,7 @@ export const AdminPanel: React.FC = () => {
                     onClick={() => setActiveTab('permissions')}
                     className={`pb-4 px-2 font-bold flex items-center gap-2 transition-colors ${activeTab === 'permissions'
                         ? 'text-primary border-b-2 border-primary'
-                        : 'text-gray-500 hover:text-gray-700'
+                        : 'text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:text-white'
                         }`}
                 >
                     <span className="material-symbols-outlined">lock</span>
@@ -297,7 +297,7 @@ export const AdminPanel: React.FC = () => {
                     onClick={() => setActiveTab('settings')}
                     className={`pb-4 px-2 font-bold flex items-center gap-2 transition-colors ${activeTab === 'settings'
                         ? 'text-primary border-b-2 border-primary'
-                        : 'text-gray-500 hover:text-gray-700'
+                        : 'text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:text-white'
                         }`}
                 >
                     <span className="material-symbols-outlined">settings</span>
@@ -307,11 +307,11 @@ export const AdminPanel: React.FC = () => {
 
             {/* Users Tab */}
             {activeTab === 'users' && (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+                <div className="bg-white dark:bg-card-dark rounded-xl shadow-sm border border-gray-100">
                     <div className="p-6 border-b border-gray-100 flex justify-between items-center">
                         <div>
-                            <h2 className="text-xl font-bold text-gray-800">Usuários do Sistema</h2>
-                            <p className="text-sm text-gray-500">Total: {users.length} usuários</p>
+                            <h2 className="text-xl font-bold text-gray-800 dark:text-white">Usuários do Sistema</h2>
+                            <p className="text-sm text-gray-500 dark:text-gray-300">Total: {users.length} usuários</p>
                         </div>
                         <button
                             onClick={() => setShowCreateModal(true)}
@@ -329,20 +329,20 @@ export const AdminPanel: React.FC = () => {
                     ) : (
                         <div className="overflow-x-auto">
                             <table className="w-full">
-                                <thead className="bg-gray-50 border-b border-gray-100">
+                                <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-100">
                                     <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Usuário</th>
-                                        <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Função</th>
-                                        <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Status</th>
-                                        <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Telefone</th>
-                                        <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Especialidade</th>
-                                        <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Cadastro</th>
-                                        <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">Ações</th>
+                                        <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 dark:text-gray-100 uppercase tracking-wider">Usuário</th>
+                                        <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 dark:text-gray-100 uppercase tracking-wider">Função</th>
+                                        <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 dark:text-gray-100 uppercase tracking-wider">Status</th>
+                                        <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 dark:text-gray-100 uppercase tracking-wider">Telefone</th>
+                                        <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 dark:text-gray-100 uppercase tracking-wider">Especialidade</th>
+                                        <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 dark:text-gray-100 uppercase tracking-wider">Cadastro</th>
+                                        <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-100 uppercase tracking-wider">Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
                                     {users.map(user => (
-                                        <tr key={user.id} className="hover:bg-gray-50 transition-colors">
+                                        <tr key={user.id} className="hover:bg-gray-50 dark:bg-gray-800 transition-colors">
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
@@ -353,8 +353,8 @@ export const AdminPanel: React.FC = () => {
                                                         )}
                                                     </div>
                                                     <div>
-                                                        <p className="font-bold text-gray-800">{user.full_name || 'Sem nome'}</p>
-                                                        <p className="text-sm text-gray-500">{user.id.substring(0, 8)}...</p>
+                                                        <p className="font-bold text-gray-800 dark:text-white">{user.full_name || 'Sem nome'}</p>
+                                                        <p className="text-sm text-gray-500 dark:text-gray-300">{user.id.substring(0, 8)}...</p>
                                                     </div>
                                                 </div>
                                             </td>
@@ -393,37 +393,34 @@ export const AdminPanel: React.FC = () => {
                                                                 handleInactivateTeacher(user);
                                                             }
                                                         }}
-                                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                                                            user.status === 'inactive' 
-                                                                ? 'bg-gray-300 hover:bg-gray-400 focus:ring-gray-500' 
+                                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${user.status === 'inactive'
+                                                                ? 'bg-gray-300 hover:bg-gray-400 focus:ring-gray-500'
                                                                 : 'bg-green-500 hover:bg-green-600 focus:ring-green-500'
-                                                        }`}
+                                                            }`}
                                                         title={user.status === 'inactive' ? 'Clique para ativar' : 'Clique para desativar'}
                                                     >
                                                         <span
-                                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow-sm ${
-                                                                user.status === 'inactive' ? 'translate-x-1' : 'translate-x-6'
-                                                            }`}
+                                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow-sm ${user.status === 'inactive' ? 'translate-x-1' : 'translate-x-6'
+                                                                }`}
                                                         />
                                                     </button>
-                                                    
+
                                                     {/* Status Label */}
-                                                    <span className={`text-xs font-bold ${
-                                                        user.status === 'inactive' 
-                                                            ? 'text-red-600' 
+                                                    <span className={`text-xs font-bold ${user.status === 'inactive'
+                                                            ? 'text-red-600'
                                                             : 'text-green-600'
-                                                    }`}>
+                                                        }`}>
                                                         {user.status === 'inactive' ? 'Inativo' : 'Ativo'}
                                                     </span>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-100">
                                                 {user.phone || '-'}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-100">
                                                 {user.specialty || '-'}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-100">
                                                 {formatDate(user.created_at)}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -435,7 +432,7 @@ export const AdminPanel: React.FC = () => {
                                                     >
                                                         <span className="material-symbols-outlined text-base">edit</span>
                                                     </button>
-                                                    
+
                                                     <button
                                                         onClick={() => confirmDelete(user)}
                                                         className="text-red-600 hover:text-red-800 transition-colors"
@@ -458,14 +455,14 @@ export const AdminPanel: React.FC = () => {
             {activeTab === 'audit' && (
                 <div className="space-y-6">
                     {/* Filters */}
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                    <div className="bg-white dark:bg-card-dark rounded-xl shadow-sm border border-gray-100 p-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-bold text-gray-600 mb-2">Filtrar por Ação</label>
+                                <label className="block text-sm font-bold text-gray-600 dark:text-gray-100 mb-2">Filtrar por Ação</label>
                                 <select
                                     value={filterAction}
                                     onChange={(e) => setFilterAction(e.target.value)}
-                                    className="w-full rounded-lg border-gray-200 focus:border-primary focus:ring-primary"
+                                    className="w-full rounded-lg border-gray-200 dark:border-gray-700 focus:border-primary focus:ring-primary bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                                 >
                                     <option value="all">Todas as ações</option>
                                     {uniqueActions.map(action => (
@@ -474,11 +471,11 @@ export const AdminPanel: React.FC = () => {
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-sm font-bold text-gray-600 mb-2">Filtrar por Entidade</label>
+                                <label className="block text-sm font-bold text-gray-600 dark:text-gray-100 mb-2">Filtrar por Entidade</label>
                                 <select
                                     value={filterEntity}
                                     onChange={(e) => setFilterEntity(e.target.value)}
-                                    className="w-full rounded-lg border-gray-200 focus:border-primary focus:ring-primary"
+                                    className="w-full rounded-lg border-gray-200 dark:border-gray-700 focus:border-primary focus:ring-primary bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                                 >
                                     <option value="all">Todas as entidades</option>
                                     {uniqueEntities.map(entity => (
@@ -490,10 +487,10 @@ export const AdminPanel: React.FC = () => {
                     </div>
 
                     {/* Logs */}
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+                    <div className="bg-white dark:bg-card-dark rounded-xl shadow-sm border border-gray-100">
                         <div className="p-6 border-b border-gray-100">
-                            <h2 className="text-xl font-bold text-gray-800">Logs de Auditoria</h2>
-                            <p className="text-sm text-gray-500">Mostrando {filteredLogs.length} de {auditLogs.length} registros</p>
+                            <h2 className="text-xl font-bold text-gray-800 dark:text-white">Logs de Auditoria</h2>
+                            <p className="text-sm text-gray-500 dark:text-gray-300">Mostrando {filteredLogs.length} de {auditLogs.length} registros</p>
                         </div>
 
                         {loading ? (
@@ -503,10 +500,10 @@ export const AdminPanel: React.FC = () => {
                         ) : (
                             <div className="divide-y divide-gray-100 max-h-[600px] overflow-y-auto">
                                 {filteredLogs.map(log => (
-                                    <div key={log.id} className="p-6 hover:bg-gray-50 transition-colors">
+                                    <div key={log.id} className="p-6 hover:bg-gray-50 dark:bg-gray-800 transition-colors">
                                         <div className="flex items-start gap-4">
-                                            <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
-                                                <span className="material-symbols-outlined text-gray-600">
+                                            <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
+                                                <span className="material-symbols-outlined text-gray-600 dark:text-gray-100">
                                                     {getEntityIcon(log.entity_type)}
                                                 </span>
                                             </div>
@@ -516,19 +513,19 @@ export const AdminPanel: React.FC = () => {
                                                         <span className={`px-2 py-1 rounded text-xs font-bold ${getActionBadgeColor(log.action)}`}>
                                                             {log.action}
                                                         </span>
-                                                        <span className="px-2 py-1 rounded bg-gray-100 text-gray-700 text-xs font-medium">
+                                                        <span className="px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-white text-xs font-medium">
                                                             {log.entity_type}
                                                         </span>
                                                     </div>
-                                                    <span className="text-sm text-gray-500 whitespace-nowrap">
+                                                    <span className="text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
                                                         {formatDate(log.created_at)}
                                                     </span>
                                                 </div>
-                                                <p className="text-sm text-gray-600 mb-1">
+                                                <p className="text-sm text-gray-600 dark:text-gray-100 mb-1">
                                                     <span className="font-medium">Usuário:</span> {log.user_email || 'Sistema'}
                                                 </p>
                                                 {log.entity_id && (
-                                                    <p className="text-sm text-gray-600 mb-2">
+                                                    <p className="text-sm text-gray-600 dark:text-gray-100 mb-2">
                                                         <span className="font-medium">ID da Entidade:</span> {log.entity_id}
                                                     </p>
                                                 )}
@@ -537,7 +534,7 @@ export const AdminPanel: React.FC = () => {
                                                         <summary className="text-sm text-blue-600 cursor-pointer hover:text-blue-800 font-medium">
                                                             Ver detalhes
                                                         </summary>
-                                                        <pre className="mt-2 p-3 bg-gray-50 rounded text-xs overflow-x-auto">
+                                                        <pre className="mt-2 p-3 bg-gray-50 dark:bg-gray-800 rounded text-xs overflow-x-auto">
                                                             {JSON.stringify(log.details, null, 2)}
                                                         </pre>
                                                     </details>
@@ -547,7 +544,7 @@ export const AdminPanel: React.FC = () => {
                                     </div>
                                 ))}
                                 {filteredLogs.length === 0 && (
-                                    <div className="p-8 text-center text-gray-500">
+                                    <div className="p-8 text-center text-gray-500 dark:text-gray-300">
                                         Nenhum log encontrado com os filtros selecionados.
                                     </div>
                                 )}
@@ -570,29 +567,29 @@ export const AdminPanel: React.FC = () => {
             {/* Create User Modal */}
             {showCreateModal && (
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
-                        <div className="p-6 border-b border-gray-100 bg-gray-50">
-                            <h2 className="text-xl font-bold text-gray-800">Criar Novo Usuário</h2>
-                            <p className="text-sm text-gray-500">Preencha os dados para criar um novo usuário no sistema.</p>
+                    <div className="bg-white dark:bg-card-dark rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
+                        <div className="p-6 border-b border-gray-100 bg-gray-50 dark:bg-gray-800">
+                            <h2 className="text-xl font-bold text-gray-800 dark:text-white">Criar Novo Usuário</h2>
+                            <p className="text-sm text-gray-500 dark:text-gray-300">Preencha os dados para criar um novo usuário no sistema.</p>
                         </div>
 
                         <form onSubmit={handleCreateUser} className="p-6 space-y-4">
                             <label className="flex flex-col gap-1.5">
-                                <span className="text-sm font-bold text-gray-600">Email</span>
+                                <span className="text-sm font-bold text-gray-600 dark:text-gray-100">Email</span>
                                 <input
                                     type="email"
                                     value={createFormData.email}
                                     onChange={(e) => setCreateFormData({ ...createFormData, email: e.target.value })}
-                                    className="form-input rounded-lg border-gray-200 focus:border-primary focus:ring-primary"
+                                    className="form-input dark:text-white rounded-lg border-gray-200 dark:border-gray-700 focus:border-primary focus:ring-primary"
                                     required
                                 />
                             </label>
 
                             {/* Avatar Upload */}
                             <div className="flex flex-col gap-1.5">
-                                <span className="text-sm font-bold text-gray-600">Foto do Perfil</span>
+                                <span className="text-sm font-bold text-gray-600 dark:text-gray-100">Foto do Perfil</span>
                                 <div className="flex items-center gap-4">
-                                    <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border-2 border-gray-200">
+                                    <div className="w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden border-2 border-gray-200 dark:border-gray-700">
                                         {createAvatarPreview ? (
                                             <img src={createAvatarPreview} alt="Preview" className="w-full h-full object-cover" />
                                         ) : (
@@ -600,7 +597,7 @@ export const AdminPanel: React.FC = () => {
                                         )}
                                     </div>
                                     <label className="flex-1 cursor-pointer">
-                                        <div className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium text-gray-700 transition-colors text-center">
+                                        <div className="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 rounded-lg text-sm font-medium text-gray-700 dark:text-white transition-colors text-center">
                                             {createAvatarFile ? 'Trocar Foto' : 'Selecionar Foto'}
                                         </div>
                                         <input
@@ -614,34 +611,34 @@ export const AdminPanel: React.FC = () => {
                             </div>
 
                             <label className="flex flex-col gap-1.5">
-                                <span className="text-sm font-bold text-gray-600">Senha</span>
+                                <span className="text-sm font-bold text-gray-600 dark:text-gray-100">Senha</span>
                                 <input
                                     type="password"
                                     value={createFormData.password}
                                     onChange={(e) => setCreateFormData({ ...createFormData, password: e.target.value })}
-                                    className="form-input rounded-lg border-gray-200 focus:border-primary focus:ring-primary"
+                                    className="form-input dark:text-white rounded-lg border-gray-200 dark:border-gray-700 focus:border-primary focus:ring-primary"
                                     required
                                     minLength={6}
                                 />
                             </label>
 
                             <label className="flex flex-col gap-1.5">
-                                <span className="text-sm font-bold text-gray-600">Nome Completo</span>
+                                <span className="text-sm font-bold text-gray-600 dark:text-gray-100">Nome Completo</span>
                                 <input
                                     type="text"
                                     value={createFormData.full_name}
                                     onChange={(e) => setCreateFormData({ ...createFormData, full_name: e.target.value })}
-                                    className="form-input rounded-lg border-gray-200 focus:border-primary focus:ring-primary"
+                                    className="form-input dark:text-white rounded-lg border-gray-200 dark:border-gray-700 focus:border-primary focus:ring-primary"
                                     required
                                 />
                             </label>
 
                             <label className="flex flex-col gap-1.5">
-                                <span className="text-sm font-bold text-gray-600">Função</span>
+                                <span className="text-sm font-bold text-gray-600 dark:text-gray-100">Função</span>
                                 <select
                                     value={createFormData.role}
                                     onChange={(e) => setCreateFormData({ ...createFormData, role: e.target.value as 'ADMIN' | 'TEACHER' })}
-                                    className="form-select rounded-lg border-gray-200 focus:border-primary focus:ring-primary"
+                                    className="form-select dark:text-white rounded-lg border-gray-200 dark:border-gray-700 focus:border-primary focus:ring-primary"
                                 >
                                     <option value="TEACHER">Professor</option>
                                     <option value="ADMIN">Administrador</option>
@@ -649,23 +646,23 @@ export const AdminPanel: React.FC = () => {
                             </label>
 
                             <label className="flex flex-col gap-1.5">
-                                <span className="text-sm font-bold text-gray-600">Telefone</span>
+                                <span className="text-sm font-bold text-gray-600 dark:text-gray-100">Telefone</span>
                                 <input
                                     type="tel"
                                     value={createFormData.phone}
                                     onChange={(e) => setCreateFormData({ ...createFormData, phone: e.target.value })}
-                                    className="form-input rounded-lg border-gray-200 focus:border-primary focus:ring-primary"
+                                    className="form-input dark:text-white rounded-lg border-gray-200 dark:border-gray-700 focus:border-primary focus:ring-primary"
                                     placeholder="(00) 00000-0000"
                                 />
                             </label>
 
                             <label className="flex flex-col gap-1.5">
-                                <span className="text-sm font-bold text-gray-600">Especialidade</span>
+                                <span className="text-sm font-bold text-gray-600 dark:text-gray-100">Especialidade</span>
                                 <input
                                     type="text"
                                     value={createFormData.specialty}
                                     onChange={(e) => setCreateFormData({ ...createFormData, specialty: e.target.value })}
-                                    className="form-input rounded-lg border-gray-200 focus:border-primary focus:ring-primary"
+                                    className="form-input dark:text-white rounded-lg border-gray-200 dark:border-gray-700 focus:border-primary focus:ring-primary"
                                     placeholder="Ex: Skate Street"
                                 />
                             </label>
@@ -674,7 +671,7 @@ export const AdminPanel: React.FC = () => {
                                 <button
                                     type="button"
                                     onClick={() => setShowCreateModal(false)}
-                                    className="flex-1 px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-700 font-bold hover:bg-gray-50 transition-colors"
+                                    className="flex-1 px-4 py-3 rounded-lg bg-white dark:bg-card-dark border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-white font-bold hover:bg-gray-50 dark:bg-gray-800 transition-colors"
                                 >
                                     Cancelar
                                 </button>
@@ -693,29 +690,29 @@ export const AdminPanel: React.FC = () => {
             {/* Edit User Modal */}
             {showEditModal && selectedUser && (
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
-                        <div className="p-6 border-b border-gray-100 bg-gray-50">
-                            <h2 className="text-xl font-bold text-gray-800">Editar Usuário</h2>
-                            <p className="text-sm text-gray-500">Atualize as informações do usuário.</p>
+                    <div className="bg-white dark:bg-card-dark rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
+                        <div className="p-6 border-b border-gray-100 bg-gray-50 dark:bg-gray-800">
+                            <h2 className="text-xl font-bold text-gray-800 dark:text-white">Editar Usuário</h2>
+                            <p className="text-sm text-gray-500 dark:text-gray-300">Atualize as informações do usuário.</p>
                         </div>
 
                         <form onSubmit={handleUpdateUser} className="p-6 space-y-4">
                             <label className="flex flex-col gap-1.5">
-                                <span className="text-sm font-bold text-gray-600">Nome Completo</span>
+                                <span className="text-sm font-bold text-gray-600 dark:text-gray-100">Nome Completo</span>
                                 <input
                                     type="text"
                                     value={editFormData.full_name}
                                     onChange={(e) => setEditFormData({ ...editFormData, full_name: e.target.value })}
-                                    className="form-input rounded-lg border-gray-200 focus:border-primary focus:ring-primary"
+                                    className="form-input dark:text-white rounded-lg border-gray-200 dark:border-gray-700 focus:border-primary focus:ring-primary"
                                     required
                                 />
                             </label>
 
                             {/* Avatar Upload */}
                             <div className="flex flex-col gap-1.5">
-                                <span className="text-sm font-bold text-gray-600">Foto do Perfil</span>
+                                <span className="text-sm font-bold text-gray-600 dark:text-gray-100">Foto do Perfil</span>
                                 <div className="flex items-center gap-4">
-                                    <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border-2 border-gray-200">
+                                    <div className="w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden border-2 border-gray-200 dark:border-gray-700">
                                         {editAvatarPreview ? (
                                             <img src={editAvatarPreview} alt="Preview" className="w-full h-full object-cover" />
                                         ) : (
@@ -723,7 +720,7 @@ export const AdminPanel: React.FC = () => {
                                         )}
                                     </div>
                                     <label className="flex-1 cursor-pointer">
-                                        <div className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium text-gray-700 transition-colors text-center">
+                                        <div className="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 rounded-lg text-sm font-medium text-gray-700 dark:text-white transition-colors text-center">
                                             {editAvatarFile ? 'Trocar Foto' : 'Selecionar Foto'}
                                         </div>
                                         <input
@@ -737,11 +734,11 @@ export const AdminPanel: React.FC = () => {
                             </div>
 
                             <label className="flex flex-col gap-1.5">
-                                <span className="text-sm font-bold text-gray-600">Função</span>
+                                <span className="text-sm font-bold text-gray-600 dark:text-gray-100">Função</span>
                                 <select
                                     value={editFormData.role}
                                     onChange={(e) => setEditFormData({ ...editFormData, role: e.target.value as 'ADMIN' | 'TEACHER' })}
-                                    className="form-select rounded-lg border-gray-200 focus:border-primary focus:ring-primary"
+                                    className="form-select dark:text-white rounded-lg border-gray-200 dark:border-gray-700 focus:border-primary focus:ring-primary"
                                 >
                                     <option value="TEACHER">Professor</option>
                                     <option value="ADMIN">Administrador</option>
@@ -749,23 +746,23 @@ export const AdminPanel: React.FC = () => {
                             </label>
 
                             <label className="flex flex-col gap-1.5">
-                                <span className="text-sm font-bold text-gray-600">Telefone</span>
+                                <span className="text-sm font-bold text-gray-600 dark:text-gray-100">Telefone</span>
                                 <input
                                     type="tel"
                                     value={editFormData.phone}
                                     onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
-                                    className="form-input rounded-lg border-gray-200 focus:border-primary focus:ring-primary"
+                                    className="form-input dark:text-white rounded-lg border-gray-200 dark:border-gray-700 focus:border-primary focus:ring-primary"
                                     placeholder="(00) 00000-0000"
                                 />
                             </label>
 
                             <label className="flex flex-col gap-1.5">
-                                <span className="text-sm font-bold text-gray-600">Especialidade</span>
+                                <span className="text-sm font-bold text-gray-600 dark:text-gray-100">Especialidade</span>
                                 <input
                                     type="text"
                                     value={editFormData.specialty}
                                     onChange={(e) => setEditFormData({ ...editFormData, specialty: e.target.value })}
-                                    className="form-input rounded-lg border-gray-200 focus:border-primary focus:ring-primary"
+                                    className="form-input dark:text-white rounded-lg border-gray-200 dark:border-gray-700 focus:border-primary focus:ring-primary"
                                     placeholder="Ex: Skate Street"
                                 />
                             </label>
@@ -774,7 +771,7 @@ export const AdminPanel: React.FC = () => {
                                 <button
                                     type="button"
                                     onClick={() => setShowEditModal(false)}
-                                    className="flex-1 px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-700 font-bold hover:bg-gray-50 transition-colors"
+                                    className="flex-1 px-4 py-3 rounded-lg bg-white dark:bg-card-dark border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-white font-bold hover:bg-gray-50 dark:bg-gray-800 transition-colors"
                                 >
                                     Cancelar
                                 </button>
@@ -793,33 +790,33 @@ export const AdminPanel: React.FC = () => {
             {/* Delete Confirmation Modal */}
             {showDeleteConfirm && userToDelete && (
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
+                    <div className="bg-white dark:bg-card-dark rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
                         <div className="p-6 border-b border-gray-100 bg-red-50">
                             <div className="flex items-center gap-3">
                                 <span className="material-symbols-outlined text-red-600 text-3xl">warning</span>
                                 <div>
-                                    <h2 className="text-xl font-bold text-gray-800">Confirmar Exclusão</h2>
-                                    <p className="text-sm text-gray-600">Esta ação não pode ser desfeita.</p>
+                                    <h2 className="text-xl font-bold text-gray-800 dark:text-white">Confirmar Exclusão</h2>
+                                    <p className="text-sm text-gray-600 dark:text-gray-100">Esta ação não pode ser desfeita.</p>
                                 </div>
                             </div>
                         </div>
 
                         <div className="p-6">
-                            <p className="text-gray-700 mb-4">
+                            <p className="text-gray-700 dark:text-white mb-4">
                                 Tem certeza que deseja deletar o usuário <strong>{userToDelete.full_name}</strong>?
                             </p>
-                            <p className="text-sm text-gray-500">
+                            <p className="text-sm text-gray-500 dark:text-gray-300">
                                 Todos os dados relacionados a este usuário serão removidos permanentemente.
                             </p>
                         </div>
 
-                        <div className="p-6 border-t border-gray-100 bg-gray-50 flex gap-3">
+                        <div className="p-6 border-t border-gray-100 bg-gray-50 dark:bg-gray-800 flex gap-3">
                             <button
                                 onClick={() => {
                                     setShowDeleteConfirm(false);
                                     setUserToDelete(null);
                                 }}
-                                className="flex-1 px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-700 font-bold hover:bg-gray-50 transition-colors"
+                                className="flex-1 px-4 py-3 rounded-lg bg-white dark:bg-card-dark border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-white font-bold hover:bg-gray-50 dark:bg-gray-800 transition-colors"
                             >
                                 Cancelar
                             </button>

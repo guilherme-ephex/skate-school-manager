@@ -2,8 +2,22 @@ import { useState, useEffect } from 'react';
 import { api } from '../lib/api';
 import { supabase } from '../../lib/supabase';
 import { Student, Attendance } from '../types/database';
-import { startOfMonth, endOfMonth, format, eachWeekOfInterval, startOfWeek, endOfWeek, parseISO } from 'date-fns';
+import { startOfMonth, endOfMonth, format, eachWeekOfInterval, startOfWeek, endOfWeek, parseISO, eachDayOfInterval, getDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+
+export interface MonthlyStats {
+    expectedClasses: number;
+    practicedClasses: number;
+    cancelledClasses: number;
+    generalAttendanceRate: number;
+}
+
+export interface RankingItem {
+    id: string;
+    name: string;
+    value: number | string;
+    subtitle?: string;
+}
 
 export interface StudentReport {
     student: Student;
@@ -47,6 +61,16 @@ export const useReportsData = (selectedMonth: Date) => {
     const [riskStudents, setRiskStudents] = useState<RiskStudent[]>([]);
     const [weeklyStats, setWeeklyStats] = useState<WeeklyStats[]>([]);
     const [classAttendanceData, setClassAttendanceData] = useState<ClassAttendanceData[]>([]);
+    
+    const [monthlyStats, setMonthlyStats] = useState<MonthlyStats>({
+        expectedClasses: 0,
+        practicedClasses: 0,
+        cancelledClasses: 0,
+        generalAttendanceRate: 0
+    });
+    const [topAbsentStudents, setTopAbsentStudents] = useState<RankingItem[]>([]);
+    const [mostActiveClasses, setMostActiveClasses] = useState<RankingItem[]>([]);
+    const [bestAttendanceClasses, setBestAttendanceClasses] = useState<RankingItem[]>([]);
 
     useEffect(() => {
         const loadData = async () => {
@@ -61,6 +85,9 @@ export const useReportsData = (selectedMonth: Date) => {
 
                 // Fetch all students with their enrollments
                 const studentsData = await api.getAllStudentsWithAttendance();
+                
+                // Fetch all classes (for expected classes calculation)
+                const { data: allClasses } = await supabase.from('classes').select('*');
                 
                 // Fetch ALL attendance (for consecutive absences - full history)
                 const { data: allAttendance, error: allAttendanceError } = await supabase
@@ -241,6 +268,124 @@ export const useReportsData = (selectedMonth: Date) => {
                         : 0;
                 }
 
+                // --- New Calculations ---
+
+                // 1. Expected Classes
+                let expectedCount = 0;
+                const classNames = new Map<string, string>();
+                
+                if (allClasses) {
+                    allClasses.forEach(c => classNames.set(c.id, c.name));
+                    
+                    const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
+                    
+                    allClasses.forEach(cls => {
+                        if (!cls.days || cls.days.length === 0) return;
+                        
+                        const dayMap: {[key: string]: number} = {
+                            'Domingo': 0, 'Segunda': 1, 'Terça': 2, 'Quarta': 3, 
+                            'Quinta': 4, 'Sexta': 5, 'Sábado': 6
+                        };
+                        
+                        const targetDays = cls.days.map((d: string) => dayMap[d]).filter((d: number | undefined) => d !== undefined);
+                        const occurrences = daysInMonth.filter(date => targetDays.includes(getDay(date))).length;
+                        expectedCount += occurrences;
+                    });
+                }
+
+                // 2. Practiced & Cancelled Classes
+                const uniqueClassesDates = new Set<string>();
+                const cancelledClassesDates = new Set<string>();
+                const classPracticeCount = new Map<string, number>();
+                
+                monthAttendance.forEach(record => {
+                    const key = `${record.class_id}-${record.date}`;
+                    uniqueClassesDates.add(key);
+                    if (record.is_cancelled) {
+                        cancelledClassesDates.add(key);
+                    }
+                });
+                
+                uniqueClassesDates.forEach(key => {
+                    if (!cancelledClassesDates.has(key)) {
+                        const cId = key.split('-')[0];
+                        classPracticeCount.set(cId, (classPracticeCount.get(cId) || 0) + 1);
+                    }
+                });
+                
+                const cancelledCount = cancelledClassesDates.size;
+                const practicedCount = uniqueClassesDates.size - cancelledCount;
+
+                // 3. General Attendance Rate
+                const totalMonthPresences = monthAttendance.filter(a => a.status === 'present').length;
+                const totalMonthAbsences = monthAttendance.filter(a => a.status === 'absent').length;
+                const totalValidRecords = totalMonthPresences + totalMonthAbsences;
+                
+                const generalRate = totalValidRecords > 0 
+                    ? Math.round((totalMonthPresences / totalValidRecords) * 100) 
+                    : 0;
+
+                // 4. Rankings
+                
+                // Top Absent Students
+                const topAbsent = [...reports]
+                    .sort((a, b) => b.totalAbsences - a.totalAbsences)
+                    .slice(0, 5)
+                    .map(r => ({
+                        id: r.student.id,
+                        name: r.student.full_name,
+                        value: r.totalAbsences,
+                        subtitle: `${r.classes.map((c: any) => c.name).join(', ')}`
+                    }));
+
+                // Most Active Classes
+                const topActiveClasses = Array.from(classPracticeCount.entries())
+                    .map(([id, count]) => ({
+                        id,
+                        name: classNames.get(id) || 'Turma desconhecida',
+                        value: count,
+                        subtitle: 'aulas realizadas'
+                    }))
+                    .sort((a, b) => (b.value as number) - (a.value as number))
+                    .slice(0, 5);
+
+                // Best Attendance Classes
+                const classStats = new Map<string, {presences: number, total: number}>();
+                monthAttendance.forEach(record => {
+                    if (record.is_cancelled) return;
+                    
+                    if (!classStats.has(record.class_id)) {
+                        classStats.set(record.class_id, { presences: 0, total: 0 });
+                    }
+                    const stats = classStats.get(record.class_id)!;
+                    if (record.status === 'present') {
+                        stats.presences++;
+                        stats.total++;
+                    } else if (record.status === 'absent') {
+                        stats.total++;
+                    }
+                });
+                
+                const topAttendanceClasses = Array.from(classStats.entries())
+                    .map(([id, stats]) => ({
+                        id,
+                        name: classNames.get(id) || 'Turma',
+                        value: stats.total > 0 ? Math.round((stats.presences / stats.total) * 100) : 0,
+                        subtitle: `${stats.presences}/${stats.total} presenças`
+                    }))
+                    .sort((a, b) => (b.value as number) - (a.value as number))
+                    .slice(0, 5);
+
+                setMonthlyStats({
+                    expectedClasses: expectedCount,
+                    practicedClasses: practicedCount,
+                    cancelledClasses: cancelledCount,
+                    generalAttendanceRate: generalRate
+                });
+                setTopAbsentStudents(topAbsent);
+                setMostActiveClasses(topActiveClasses);
+                setBestAttendanceClasses(topAttendanceClasses);
+
                 const classAttendanceArray = Array.from(classAttendanceMap.values())
                     .sort((a, b) => b.date.localeCompare(a.date));
 
@@ -265,7 +410,11 @@ export const useReportsData = (selectedMonth: Date) => {
         studentReports,
         riskStudents,
         weeklyStats,
-        classAttendanceData
+        classAttendanceData,
+        monthlyStats,
+        topAbsentStudents,
+        mostActiveClasses,
+        bestAttendanceClasses
     };
 };
 

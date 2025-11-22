@@ -20,13 +20,24 @@ export const Reports: React.FC = () => {
     const [contactNotes, setContactNotes] = useState('');
     const [contactType, setContactType] = useState<'phone' | 'email' | 'in_person' | 'other'>('phone');
     const [processingContact, setProcessingContact] = useState(false);
-    
+
     // Student Report Modal
     const [studentReportModalOpen, setStudentReportModalOpen] = useState(false);
     const [selectedStudentForReport, setSelectedStudentForReport] = useState<string>('');
     const [generatingStudentReport, setGeneratingStudentReport] = useState(false);
 
-    const { loading, error, studentReports, riskStudents, weeklyStats, classAttendanceData } = useReportsData(selectedMonthDate);
+    const { 
+        loading, 
+        error, 
+        studentReports, 
+        riskStudents, 
+        weeklyStats, 
+        classAttendanceData,
+        monthlyStats,
+        topAbsentStudents,
+        mostActiveClasses,
+        bestAttendanceClasses
+    } = useReportsData(selectedMonthDate);
 
     // Generate month options (last 6 months)
     const monthOptions = Array.from({ length: 6 }, (_, i) => {
@@ -167,17 +178,17 @@ export const Reports: React.FC = () => {
         <div className="max-w-7xl mx-auto pb-20">
             <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-black text-text-light">Relatórios e Prestação de Contas</h1>
-                    <p className="text-muted">Acompanhamento de frequência, evasão e exportação mensal.</p>
+                    <h1 className="text-3xl font-black text-text-light dark:text-text-dark">Relatórios e Prestação de Contas</h1>
+                    <p className="text-muted dark:text-muted-dark">Acompanhamento de frequência, evasão e exportação mensal.</p>
                 </div>
 
                 <div className="w-full md:w-auto">
-                    <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-lg border border-border-light shadow-sm relative group hover:border-primary/30 transition-colors">
+                    <div className="flex items-center gap-3 bg-white dark:bg-card-dark px-4 py-2 rounded-lg border border-border-light dark:border-border-dark shadow-sm relative group hover:border-primary/30 transition-colors">
                         <div className="p-2 bg-primary/5 rounded-lg group-hover:bg-primary/10 transition-colors">
                             <span className="material-symbols-outlined text-primary">calendar_month</span>
                         </div>
                         <div className="flex flex-col items-start relative min-w-[140px]">
-                            <label className="text-[10px] font-bold text-muted uppercase tracking-wide">Mês de Referência</label>
+                            <label className="text-[10px] font-bold text-muted dark:text-muted-dark uppercase tracking-wide">Mês de Referência</label>
                             <select
                                 value={format(selectedMonthDate, 'yyyy-MM')}
                                 onChange={(e) => setSelectedMonthDate(parseISO(e.target.value + '-01'))}
@@ -187,7 +198,107 @@ export const Reports: React.FC = () => {
                                     <option key={opt.value} value={opt.value}>{opt.label}</option>
                                 ))}
                             </select>
-                            <span className="material-symbols-outlined absolute right-0 top-1/2 mt-1 -translate-y-1/2 text-sm text-muted pointer-events-none">expand_more</span>
+                            <span className="material-symbols-outlined absolute right-0 top-1/2 mt-1 -translate-y-1/2 text-sm text-muted dark:text-muted-dark pointer-events-none">expand_more</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* SECTION: MONTH OVERVIEW & RANKINGS */}
+            <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
+                <h2 className="text-xl font-bold text-text-light dark:text-text-dark mb-4">Visão Geral do Mês</h2>
+                
+                {/* KPIs */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div className="bg-white dark:bg-card-dark p-4 rounded-xl border border-border-light dark:border-border-dark shadow-sm">
+                        <p className="text-sm font-bold text-muted dark:text-muted-dark mb-1">Aulas Previstas</p>
+                        <p className="text-2xl font-black text-text-light dark:text-text-dark">{monthlyStats.expectedClasses}</p>
+                    </div>
+                    <div className="bg-white dark:bg-card-dark p-4 rounded-xl border border-border-light dark:border-border-dark shadow-sm">
+                        <p className="text-sm font-bold text-muted dark:text-muted-dark mb-1">Aulas Praticadas</p>
+                        <p className="text-2xl font-black text-green-600">{monthlyStats.practicedClasses}</p>
+                    </div>
+                    <div className="bg-white dark:bg-card-dark p-4 rounded-xl border border-border-light dark:border-border-dark shadow-sm">
+                        <p className="text-sm font-bold text-muted dark:text-muted-dark mb-1">Aulas Canceladas</p>
+                        <p className="text-2xl font-black text-red-500">{monthlyStats.cancelledClasses}</p>
+                    </div>
+                    <div className="bg-white dark:bg-card-dark p-4 rounded-xl border border-border-light dark:border-border-dark shadow-sm relative overflow-hidden">
+                        <div className="relative z-10">
+                            <p className="text-sm font-bold text-muted dark:text-muted-dark mb-1">Taxa de Frequência</p>
+                            <p className="text-2xl font-black text-primary">{monthlyStats.generalAttendanceRate}%</p>
+                        </div>
+                        <div className="absolute right-0 top-0 w-16 h-16 bg-primary/10 rounded-bl-full -mr-2 -mt-2"></div>
+                    </div>
+                </div>
+
+                {/* RANKINGS */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Top Absent Students */}
+                    <div className="bg-white dark:bg-card-dark rounded-xl border border-border-light dark:border-border-dark shadow-sm p-5">
+                        <div className="flex items-center gap-2 mb-4 text-red-600">
+                            <span className="material-symbols-outlined">person_off</span>
+                            <h3 className="font-bold">Alunos com Mais Faltas</h3>
+                        </div>
+                        <div className="space-y-3">
+                            {topAbsentStudents.length > 0 ? (
+                                topAbsentStudents.map((item, idx) => (
+                                    <div key={idx} className="flex justify-between items-center text-sm">
+                                        <div>
+                                            <p className="font-bold text-text-light dark:text-text-dark">{item.name}</p>
+                                            <p className="text-xs text-muted dark:text-muted-dark truncate max-w-[180px]">{item.subtitle}</p>
+                                        </div>
+                                        <span className="font-black text-red-600 bg-red-50 px-2 py-1 rounded-md">{item.value}</span>
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="text-sm text-muted dark:text-muted-dark text-center py-2">Sem dados</p>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Most Active Classes */}
+                    <div className="bg-white dark:bg-card-dark rounded-xl border border-border-light dark:border-border-dark shadow-sm p-5">
+                        <div className="flex items-center gap-2 mb-4 text-blue-600">
+                            <span className="material-symbols-outlined">skateboarding</span>
+                            <h3 className="font-bold">Turmas Mais Ativas</h3>
+                        </div>
+                        <div className="space-y-3">
+                            {mostActiveClasses.length > 0 ? (
+                                mostActiveClasses.map((item, idx) => (
+                                    <div key={idx} className="flex justify-between items-center text-sm">
+                                        <div>
+                                            <p className="font-bold text-text-light dark:text-text-dark">{item.name}</p>
+                                            <p className="text-xs text-muted dark:text-muted-dark">{item.subtitle}</p>
+                                        </div>
+                                        <span className="font-black text-blue-600 bg-blue-50 px-2 py-1 rounded-md">{item.value}</span>
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="text-sm text-muted dark:text-muted-dark text-center py-2">Sem dados</p>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Best Attendance */}
+                    <div className="bg-white dark:bg-card-dark rounded-xl border border-border-light dark:border-border-dark shadow-sm p-5">
+                        <div className="flex items-center gap-2 mb-4 text-green-600">
+                            <span className="material-symbols-outlined">verified</span>
+                            <h3 className="font-bold">Melhor Frequência</h3>
+                        </div>
+                        <div className="space-y-3">
+                            {bestAttendanceClasses.length > 0 ? (
+                                bestAttendanceClasses.map((item, idx) => (
+                                    <div key={idx} className="flex justify-between items-center text-sm">
+                                        <div>
+                                            <p className="font-bold text-text-light dark:text-text-dark">{item.name}</p>
+                                            <p className="text-xs text-muted dark:text-muted-dark">{item.subtitle}</p>
+                                        </div>
+                                        <span className="font-black text-green-600 bg-green-50 px-2 py-1 rounded-md">{item.value}%</span>
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="text-sm text-muted dark:text-muted-dark text-center py-2">Sem dados</p>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -212,14 +323,14 @@ export const Reports: React.FC = () => {
                                         <p className="text-red-700 text-sm">{riskStudents.length} aluno(s) com 3 ou mais faltas consecutivas.</p>
                                     </div>
                                 </div>
-                                <div className="bg-white/50 px-3 py-1 rounded text-xs text-red-800 font-medium border border-red-100">
+                                <div className="bg-white dark:bg-card-dark/50 px-3 py-1 rounded text-xs text-red-800 font-medium border border-red-100">
                                     * Calculado com base no histórico completo
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-1 gap-4">
                                 {riskStudents.map((risk, idx) => (
-                                    <div key={idx} className="bg-white p-5 rounded-lg border border-red-100 shadow-sm flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 transition-transform hover:scale-[1.01]">
+                                    <div key={idx} className="bg-white dark:bg-card-dark p-5 rounded-lg border border-red-100 shadow-sm flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 transition-transform hover:scale-[1.01]">
                                         <div className="flex-grow">
                                             <div className="flex items-center gap-2 mb-1">
                                                 <p className="font-bold text-gray-900 text-lg">{risk.student.full_name}</p>
@@ -227,20 +338,19 @@ export const Reports: React.FC = () => {
                                                     {risk.consecutiveAbsences} Faltas Consecutivas
                                                 </span>
                                             </div>
-                                            <p className="text-sm text-gray-500 mb-2">
-                                                Turma(s): {risk.classes.join(', ')} • Responsável: <span className="font-medium text-gray-700">{risk.parentName}</span>
+                                            <p className="text-sm text-gray-500 dark:text-gray-300 mb-2">
+                                                Turma(s): {risk.classes.join(', ')} • Responsável: <span className="font-medium text-gray-700 dark:text-white">{risk.parentName}</span>
                                             </p>
 
                                             {/* Visual History */}
                                             <div className="flex items-center gap-1 flex-wrap">
                                                 {risk.history.slice(0, 10).map((h, hIdx) => (
-                                                    <div 
-                                                        key={hIdx} 
-                                                        className={`w-8 h-8 rounded flex items-center justify-center text-xs font-bold text-white ${
-                                                            h === 'absent' ? 'bg-red-500' : 
-                                                            h === 'justified' ? 'bg-yellow-500' : 
-                                                            'bg-green-500'
-                                                        }`} 
+                                                    <div
+                                                        key={hIdx}
+                                                        className={`w-8 h-8 rounded flex items-center justify-center text-xs font-bold text-white ${h === 'absent' ? 'bg-red-500' :
+                                                            h === 'justified' ? 'bg-yellow-500' :
+                                                                'bg-green-500'
+                                                            }`}
                                                         title={h === 'absent' ? 'Falta' : h === 'justified' ? 'Justificada' : 'Presente'}
                                                     >
                                                         {h === 'absent' ? 'F' : h === 'justified' ? 'J' : 'P'}
@@ -261,7 +371,7 @@ export const Reports: React.FC = () => {
 
                                             <button
                                                 onClick={() => handleInactivate(risk.student.id, risk.student.full_name)}
-                                                className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-white text-gray-700 border border-gray-300 text-sm font-bold rounded-lg hover:bg-gray-50 hover:text-red-600 hover:border-red-200 transition-colors"
+                                                className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-white dark:bg-card-dark text-gray-700 dark:text-white border border-gray-300 dark:border-gray-600 text-sm font-bold rounded-lg hover:bg-gray-50 dark:bg-gray-800 hover:text-red-600 hover:border-red-200 transition-colors"
                                             >
                                                 <span className="material-symbols-outlined text-lg">person_off</span>
                                                 Inativar Aluno
@@ -283,11 +393,11 @@ export const Reports: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
                 {/* SECTION 2: EXPORT */}
                 <div className="lg:col-span-1 bg-primary text-white rounded-xl p-6 shadow-lg flex flex-col h-full relative overflow-hidden">
-                    <div className="absolute -right-4 -top-4 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
+                    <div className="absolute -right-4 -top-4 w-24 h-24 bg-white dark:bg-card-dark/10 rounded-full blur-2xl"></div>
 
                     <div className="mb-6 relative z-10">
                         <div className="flex items-center gap-3 mb-2">
-                            <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                            <div className="w-10 h-10 bg-white dark:bg-card-dark/20 rounded-lg flex items-center justify-center">
                                 <span className="material-symbols-outlined text-xl">file_save</span>
                             </div>
                             <h2 className="text-xl font-bold">Exportar Relatório</h2>
@@ -341,17 +451,17 @@ export const Reports: React.FC = () => {
                             </div>
                         )}
 
-                        <button 
+                        <button
                             onClick={handleExport}
-                            className="w-full h-12 bg-white text-primary hover:bg-gray-100 font-bold rounded-lg shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"
+                            className="w-full h-12 bg-white dark:bg-card-dark text-primary hover:bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-800 font-bold rounded-lg shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"
                         >
                             <span className="material-symbols-outlined">download</span>
                             Baixar {exportFormat} Geral
                         </button>
 
-                        <button 
+                        <button
                             onClick={() => setStudentReportModalOpen(true)}
-                            className="w-full h-12 bg-white/20 border-2 border-white/40 text-white hover:bg-white/30 font-bold rounded-lg transition-all active:scale-95 flex items-center justify-center gap-2"
+                            className="w-full h-12 bg-white/20 border-2 border-white/40 text-white hover:bg-white dark:bg-card-dark/30 font-bold rounded-lg transition-all active:scale-95 flex items-center justify-center gap-2"
                         >
                             <span className="material-symbols-outlined">person_search</span>
                             Relatório Individual
@@ -360,18 +470,18 @@ export const Reports: React.FC = () => {
                 </div>
 
                 {/* SECTION 3: TREND CHART */}
-                <div className="lg:col-span-2 bg-card-light p-6 rounded-xl border border-border-light shadow-sm flex flex-col">
+                <div className="lg:col-span-2 bg-card-light dark:bg-card-dark p-6 rounded-xl border border-border-light dark:border-border-dark shadow-sm flex flex-col">
                     <div className="flex items-center justify-between mb-6">
                         <div>
-                            <h3 className="text-lg font-bold text-text-light">Tendência de Frequência</h3>
-                            <p className="text-sm text-muted">Comparativo de presenças vs. faltas em {format(selectedMonthDate, "MMMM", { locale: ptBR })}.</p>
+                            <h3 className="text-lg font-bold text-text-light dark:text-text-dark">Tendência de Frequência</h3>
+                            <p className="text-sm text-muted dark:text-muted-dark">Comparativo de presenças vs. faltas em {format(selectedMonthDate, "MMMM", { locale: ptBR })}.</p>
                         </div>
                         <div className="flex items-center gap-4">
                             <div className="flex items-center gap-2 text-sm font-medium">
                                 <div className="w-3 h-3 rounded-full bg-primary"></div> Presentes
                             </div>
                             <div className="flex items-center gap-2 text-sm font-medium">
-                                <div className="w-3 h-3 rounded-full bg-gray-300"></div> Faltas
+                                <div className="w-3 h-3 rounded-full bg-red-500"></div> Faltas
                             </div>
                         </div>
                     </div>
@@ -402,7 +512,7 @@ export const Reports: React.FC = () => {
                                 <Area
                                     type="monotone"
                                     dataKey="faltas"
-                                    stroke="#CBD5E0"
+                                    stroke="#EF4444"
                                     strokeWidth={2}
                                     fill="transparent"
                                     strokeDasharray="5 5"
@@ -414,41 +524,41 @@ export const Reports: React.FC = () => {
             </div>
 
             {/* SECTION 4: DETAILED LIST */}
-            <div className="bg-card-light rounded-xl border border-border-light shadow-sm overflow-hidden">
-                <div className="p-6 border-b border-border-light flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="bg-card-light dark:bg-card-dark rounded-xl border border-border-light dark:border-border-dark shadow-sm overflow-hidden">
+                <div className="p-6 border-b border-border-light dark:border-border-dark flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                        <h3 className="text-lg font-bold text-text-light">Registro Geral de Alunos</h3>
-                        <p className="text-sm text-muted">Lista completa consolidada de <strong>{format(selectedMonthDate, "MMMM 'de' yyyy", { locale: ptBR })}</strong>.</p>
+                        <h3 className="text-lg font-bold text-text-light dark:text-text-dark">Registro Geral de Alunos</h3>
+                        <p className="text-sm text-muted dark:text-muted-dark">Lista completa consolidada de <strong>{format(selectedMonthDate, "MMMM 'de' yyyy", { locale: ptBR })}</strong>.</p>
                     </div>
                     <div className="relative w-full sm:w-64">
-                        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-muted">search</span>
-                        <input 
-                            type="text" 
-                            placeholder="Buscar aluno..." 
+                        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-muted dark:text-muted-dark">search</span>
+                        <input
+                            type="text"
+                            placeholder="Buscar aluno..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 h-10 rounded-lg border-gray-300 focus:border-primary focus:ring-primary text-sm" 
+                            className="w-full pl-10 h-10 rounded-lg border-gray-300 dark:border-gray-600 focus:border-primary focus:ring-primary text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                         />
                     </div>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
-                        <thead className="bg-gray-50 border-b border-gray-200">
+                        <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
                             <tr>
-                                <th className="px-6 py-3 text-xs font-bold text-muted uppercase">Aluno</th>
-                                <th className="px-6 py-3 text-xs font-bold text-muted uppercase">Turmas</th>
-                                <th className="px-6 py-3 text-xs font-bold text-muted uppercase text-center">Faltas (Mês)</th>
-                                <th className="px-6 py-3 text-xs font-bold text-muted uppercase text-center">Frequência</th>
-                                <th className="px-6 py-3 text-xs font-bold text-muted uppercase text-center">Consecutivas</th>
-                                <th className="px-6 py-3 text-xs font-bold text-muted uppercase text-right">Status</th>
+                                <th className="px-6 py-3 text-xs font-bold text-muted dark:text-muted-dark uppercase">Aluno</th>
+                                <th className="px-6 py-3 text-xs font-bold text-muted dark:text-muted-dark uppercase">Turmas</th>
+                                <th className="px-6 py-3 text-xs font-bold text-muted dark:text-muted-dark uppercase text-center">Faltas (Mês)</th>
+                                <th className="px-6 py-3 text-xs font-bold text-muted dark:text-muted-dark uppercase text-center">Frequência</th>
+                                <th className="px-6 py-3 text-xs font-bold text-muted dark:text-muted-dark uppercase text-center">Consecutivas</th>
+                                <th className="px-6 py-3 text-xs font-bold text-muted dark:text-muted-dark uppercase text-right">Status</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                             {filteredReports.map((report, i) => (
-                                <tr key={i} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 font-medium text-text-light">{report.student.full_name}</td>
-                                    <td className="px-6 py-4 text-muted text-sm">{report.classes.map(c => c.name).join(', ')}</td>
-                                    <td className="px-6 py-4 text-center font-bold text-text-light">{report.totalAbsences}</td>
+                                <tr key={i} className="hover:bg-gray-50 dark:bg-gray-800">
+                                    <td className="px-6 py-4 font-medium text-text-light dark:text-text-dark">{report.student.full_name}</td>
+                                    <td className="px-6 py-4 text-muted dark:text-muted-dark text-sm">{report.classes.map(c => c.name).join(', ')}</td>
+                                    <td className="px-6 py-4 text-center font-bold text-text-light dark:text-text-dark">{report.totalAbsences}</td>
                                     <td className="px-6 py-4 text-center">
                                         <div className="flex items-center justify-center gap-2">
                                             <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
@@ -460,21 +570,20 @@ export const Reports: React.FC = () => {
                                             <span className="text-xs font-medium w-8">{report.attendanceRate}%</span>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 text-center font-bold text-text-light">
+                                    <td className="px-6 py-4 text-center font-bold text-text-light dark:text-text-dark">
                                         {report.consecutiveAbsencesGlobal > 0 ? (
-                                            <span className={`${report.consecutiveAbsencesGlobal >= 3 ? 'text-red-600' : 'text-gray-600'}`}>
+                                            <span className={`${report.consecutiveAbsencesGlobal >= 3 ? 'text-red-600' : 'text-gray-600 dark:text-gray-100'}`}>
                                                 {report.consecutiveAbsencesGlobal}
                                             </span>
                                         ) : '-'}
                                     </td>
                                     <td className="px-6 py-4 text-right">
-                                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${
-                                            report.status === 'regular' ? 'bg-green-100 text-green-800' :
+                                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${report.status === 'regular' ? 'bg-green-100 text-green-800' :
                                             report.status === 'risk' ? 'bg-red-100 text-red-800' :
-                                            'bg-yellow-100 text-yellow-800'
-                                        }`}>
-                                            {report.status === 'regular' ? 'Regular' : 
-                                             report.status === 'risk' ? 'Risco' : 'Atenção'}
+                                                'bg-yellow-100 text-yellow-800'
+                                            }`}>
+                                            {report.status === 'regular' ? 'Regular' :
+                                                report.status === 'risk' ? 'Risco' : 'Atenção'}
                                         </span>
                                     </td>
                                 </tr>
@@ -487,16 +596,16 @@ export const Reports: React.FC = () => {
             {/* Contact Modal */}
             {contactModalOpen && selectedStudent && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-2xl">
-                        <h3 className="text-xl font-bold text-text-light mb-4">Registrar Contato</h3>
-                        <p className="text-sm text-muted mb-6">Aluno: <strong>{selectedStudent.name}</strong></p>
+                    <div className="bg-white dark:bg-card-dark rounded-xl p-6 max-w-md w-full shadow-2xl">
+                        <h3 className="text-xl font-bold text-text-light dark:text-text-dark mb-4">Registrar Contato</h3>
+                        <p className="text-sm text-muted dark:text-muted-dark mb-6">Aluno: <strong>{selectedStudent.name}</strong></p>
 
                         <div className="mb-4">
-                            <label className="block text-sm font-bold text-text-light mb-2">Tipo de Contato</label>
-                            <select 
+                            <label className="block text-sm font-bold text-text-light dark:text-text-dark mb-2">Tipo de Contato</label>
+                            <select
                                 value={contactType}
                                 onChange={(e) => setContactType(e.target.value as any)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                             >
                                 <option value="phone">Telefone</option>
                                 <option value="email">E-mail</option>
@@ -506,12 +615,12 @@ export const Reports: React.FC = () => {
                         </div>
 
                         <div className="mb-6">
-                            <label className="block text-sm font-bold text-text-light mb-2">Observações</label>
+                            <label className="block text-sm font-bold text-text-light dark:text-text-dark mb-2">Observações</label>
                             <textarea
                                 value={contactNotes}
                                 onChange={(e) => setContactNotes(e.target.value)}
                                 placeholder="Descreva o que foi conversado com o responsável..."
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent resize-none h-32"
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent resize-none h-32 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                             />
                         </div>
 
@@ -523,7 +632,7 @@ export const Reports: React.FC = () => {
                                     setContactNotes('');
                                 }}
                                 disabled={processingContact}
-                                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-bold transition-colors disabled:opacity-50"
+                                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-white rounded-lg hover:bg-gray-50 dark:bg-gray-800 font-bold transition-colors disabled:opacity-50"
                             >
                                 Cancelar
                             </button>
@@ -542,16 +651,16 @@ export const Reports: React.FC = () => {
             {/* Student Report Modal */}
             {studentReportModalOpen && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-2xl">
-                        <h3 className="text-xl font-bold text-text-light mb-4">Relatório Individual de Aluno</h3>
-                        <p className="text-sm text-muted mb-6">Selecione o aluno para gerar o relatório completo de frequência.</p>
+                    <div className="bg-white dark:bg-card-dark rounded-xl p-6 max-w-md w-full shadow-2xl">
+                        <h3 className="text-xl font-bold text-text-light dark:text-text-dark mb-4">Relatório Individual de Aluno</h3>
+                        <p className="text-sm text-muted dark:text-muted-dark mb-6">Selecione o aluno para gerar o relatório completo de frequência.</p>
 
                         <div className="mb-6">
-                            <label className="block text-sm font-bold text-text-light mb-2">Selecionar Aluno</label>
-                            <select 
+                            <label className="block text-sm font-bold text-text-light dark:text-text-dark mb-2">Selecionar Aluno</label>
+                            <select
                                 value={selectedStudentForReport}
                                 onChange={(e) => setSelectedStudentForReport(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                             >
                                 <option value="">-- Escolha um aluno --</option>
                                 {studentReports.map(report => (
@@ -569,7 +678,7 @@ export const Reports: React.FC = () => {
                                     setSelectedStudentForReport('');
                                 }}
                                 disabled={generatingStudentReport}
-                                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-bold transition-colors disabled:opacity-50"
+                                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-white rounded-lg hover:bg-gray-50 dark:bg-gray-800 font-bold transition-colors disabled:opacity-50"
                             >
                                 Cancelar
                             </button>

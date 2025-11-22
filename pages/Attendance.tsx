@@ -38,13 +38,13 @@ export const Attendance: React.FC = () => {
   const [classes, setClasses] = useState<Class[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [attendance, setAttendance] = useState<Map<string, AttendanceRecord>>(new Map());
-  const [selectedDate, setSelectedDate] = useState<Date>(() => {
-    if (dateParam) {
-      const [year, month, day] = dateParam.split('-').map(Number);
-      return new Date(year, month - 1, day);
-    }
-    return new Date();
+
+  // Use string YYYY-MM-DD directly to avoid timezone issues
+  const [selectedDate, setSelectedDate] = useState<string>(() => {
+    if (dateParam) return dateParam;
+    return new Date().toISOString().split('T')[0];
   });
+
   const [generalNotes, setGeneralNotes] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -75,12 +75,27 @@ export const Attendance: React.FC = () => {
 
   const fetchClasses = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('classes')
         .select(`
                     *,
                     teacher:profiles!classes_teacher_id_fkey(full_name)
                 `);
+
+      // Se for professor (e não admin), filtra apenas suas turmas
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+
+        if (profile?.role === 'TEACHER') {
+          query = query.eq('teacher_id', user.id);
+        }
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setClasses(data || []);
@@ -145,10 +160,8 @@ export const Attendance: React.FC = () => {
     }
   };
 
-  const loadExistingAttendance = async (classId: string, date: Date) => {
+  const loadExistingAttendance = async (classId: string, dateStr: string) => {
     try {
-      const dateStr = date.toISOString().split('T')[0];
-
       const { data, error } = await supabase
         .from('attendance')
         .select('*')
@@ -265,10 +278,10 @@ export const Attendance: React.FC = () => {
 
     setSaving(true);
     try {
-      const dateStr = selectedDate.toISOString().split('T')[0];
-      
-      // Use forceCancelled se fornecido, senão usa o estado
-      const isThisCancelled = forceCancelled !== undefined ? forceCancelled : isCancelled;
+      const dateStr = selectedDate;
+
+      // Use forceCancelled se fornecido e for booleano, senão usa o estado
+      const isThisCancelled = typeof forceCancelled === 'boolean' ? forceCancelled : isCancelled;
 
       // Preparar registros de presença
       // Se cancelada, salvamos um registro para cada aluno com status null ou mantemos o status mas marcamos is_cancelled
@@ -320,9 +333,15 @@ export const Attendance: React.FC = () => {
       // Forçar recarregamento dos dados
       await loadExistingAttendance(selectedClass.id, selectedDate);
 
-    } catch (error) {
-      console.error('Erro ao salvar chamada:', error);
-      alert('Erro ao salvar chamada. Tente novamente.');
+    } catch (error: any) {
+      console.error('Erro detalhado ao salvar chamada:', error);
+      // Evita JSON.stringify em objetos de erro complexos que podem ser cíclicos
+      const errorMessage = error?.message ||
+        error?.error_description ||
+        error?.details ||
+        (typeof error === 'string' ? error : 'Erro desconhecido');
+
+      alert(`Erro ao salvar chamada: ${errorMessage}. Tente novamente.`);
     } finally {
       setSaving(false);
       setShowCancelModal(false);
@@ -358,41 +377,12 @@ export const Attendance: React.FC = () => {
     justified: Array.from(attendance.values()).filter((a: AttendanceRecord) => a.status === 'justified').length,
   };
 
-  // Gerar dias para o seletor de data
-  const generateDateRange = () => {
-    const dates = [];
-    const today = new Date();
-    for (let i = -3; i <= 3; i++) {
-      const date = new Date(today);
-      date.setDate(today.getDate() + i);
-      dates.push(date);
-    }
-    return dates;
-  };
-
-  const formatDateShort = (date: Date) => {
-    const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-    const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-    return {
-      day: date.getDate(),
-      weekday: days[date.getDay()],
-      month: months[date.getMonth()]
-    };
-  };
-
-  const isToday = (date: Date) => {
-    const today = new Date();
-    return date.toDateString() === today.toDateString();
-  };
-
-  const dateRange = generateDateRange();
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
           <span className="material-symbols-outlined text-6xl text-primary animate-pulse">hourglass_empty</span>
-          <p className="text-muted mt-4">Carregando...</p>
+          <p className="text-muted dark:text-muted-dark mt-4">Carregando...</p>
         </div>
       </div>
     );
@@ -403,7 +393,7 @@ export const Attendance: React.FC = () => {
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
           <span className="material-symbols-outlined text-6xl text-gray-300 mb-4">school</span>
-          <p className="text-muted mb-4">Nenhuma turma cadastrada ainda.</p>
+          <p className="text-muted dark:text-muted-dark mb-4">Nenhuma turma cadastrada ainda.</p>
           <button
             onClick={() => navigate('/cadastro')}
             className="bg-primary text-white px-6 py-3 rounded-lg font-bold hover:bg-primary/90"
@@ -418,7 +408,7 @@ export const Attendance: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto pb-32">
       <div className="mb-6 flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-text-light">Registrar Chamada</h1>
+        <h1 className="text-3xl font-bold text-text-light dark:text-text-dark">Registrar Chamada</h1>
         {selectedClass && (
           <button
             onClick={toggleCancellation}
@@ -451,15 +441,15 @@ export const Attendance: React.FC = () => {
       )}
 
       {/* Class Selector */}
-      <div className="bg-card-light rounded-xl p-4 shadow-sm border border-border-light mb-6">
-        <p className="text-sm text-muted mb-2">Turma selecionada</p>
+      <div className="bg-card-light dark:bg-card-dark rounded-xl p-4 shadow-sm border border-border-light dark:border-border-dark mb-6">
+        <p className="text-sm text-muted dark:text-muted-dark mb-2">Turma selecionada</p>
         <select
           value={selectedClass?.id || ''}
           onChange={(e) => {
             const classId = e.target.value;
             navigate(`/attendance?classId=${classId}`);
           }}
-          className="w-full rounded-lg border-gray-300 focus:border-primary focus:ring-primary"
+          className="w-full rounded-lg border-gray-300 dark:border-gray-600 focus:border-primary focus:ring-primary"
         >
           {classes.map(c => {
             const cls = c as any;
@@ -474,23 +464,20 @@ export const Attendance: React.FC = () => {
 
       {/* Date Selector */}
       <div className="mb-6">
-        <label className="block text-sm font-medium text-text-light mb-2">Data da Chamada</label>
+        <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">Data da Chamada</label>
         <input
           type="date"
-          value={selectedDate.toISOString().split('T')[0]}
+          value={selectedDate}
           onChange={(e) => {
             if (e.target.value) {
-              const newDate = new Date(e.target.value);
-              // Ajuste para fuso horário local para evitar pular dia
-              const userTimezoneOffset = newDate.getTimezoneOffset() * 60000;
-              const adjustedDate = new Date(newDate.getTime() + userTimezoneOffset);
-              setSelectedDate(adjustedDate);
+              const newDateStr = e.target.value;
+              setSelectedDate(newDateStr);
               if (selectedClass) {
-                loadExistingAttendance(selectedClass.id, adjustedDate);
+                loadExistingAttendance(selectedClass.id, newDateStr);
               }
             }
           }}
-          className="w-full md:w-auto rounded-lg border-gray-300 focus:border-primary focus:ring-primary"
+          className="w-full md:w-auto rounded-lg border-gray-300 dark:border-gray-600 focus:border-primary focus:ring-primary"
         />
       </div>
 
@@ -498,7 +485,7 @@ export const Attendance: React.FC = () => {
       {students.length === 0 ? (
         <div className="text-center py-12">
           <span className="material-symbols-outlined text-6xl text-gray-300 mb-4">group_off</span>
-          <p className="text-muted">Nenhum aluno matriculado nesta turma.</p>
+          <p className="text-muted dark:text-muted-dark">Nenhum aluno matriculado nesta turma.</p>
         </div>
       ) : (
         <div className="flex flex-col gap-4">
@@ -510,7 +497,7 @@ export const Attendance: React.FC = () => {
               <div
                 key={student.id}
                 className={`bg-card-light rounded-xl p-4 shadow-sm border-l-4 transition-all ${isCancelled
-                  ? 'border-gray-300 opacity-75'
+                  ? 'border-gray-300 dark:border-gray-600 opacity-75'
                   : status === 'present'
                     ? 'border-success'
                     : status === 'absent'
@@ -526,14 +513,14 @@ export const Attendance: React.FC = () => {
                       <span className="material-symbols-outlined text-gray-400">person</span>
                     )}
                   </div>
-                  <span className="font-semibold text-lg text-text-light">{student.full_name}</span>
+                  <span className="font-semibold text-lg text-text-light dark:text-text-dark">{student.full_name}</span>
                 </div>
 
                 <div className="grid grid-cols-3 gap-2">
                   <button
                     onClick={() => handleStatusChange(student.id, 'present')}
                     disabled={isCancelled || !canEdit}
-                    className={`flex flex-col items-center gap-1 p-3 rounded-lg transition-colors ${status === 'present' ? 'bg-success text-white' : 'bg-gray-100 text-muted'} disabled:opacity-50 disabled:cursor-not-allowed`}
+                    className={`flex flex-col items-center gap-1 p-3 rounded-lg transition-colors ${status === 'present' ? 'bg-success text-white' : 'bg-gray-100 dark:bg-gray-700 text-muted'} disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
                     <span className="material-symbols-outlined">check_circle</span>
                     <span className="text-sm font-bold">Presente</span>
@@ -541,7 +528,7 @@ export const Attendance: React.FC = () => {
                   <button
                     onClick={() => handleStatusChange(student.id, 'absent')}
                     disabled={isCancelled || !canEdit}
-                    className={`flex flex-col items-center gap-1 p-3 rounded-lg transition-colors ${status === 'absent' ? 'bg-danger text-white' : 'bg-gray-100 text-muted'} disabled:opacity-50 disabled:cursor-not-allowed`}
+                    className={`flex flex-col items-center gap-1 p-3 rounded-lg transition-colors ${status === 'absent' ? 'bg-danger text-white' : 'bg-gray-100 dark:bg-gray-700 text-muted'} disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
                     <span className="material-symbols-outlined">cancel</span>
                     <span className="text-sm font-bold">Falta</span>
@@ -549,7 +536,7 @@ export const Attendance: React.FC = () => {
                   <button
                     onClick={() => handleStatusChange(student.id, 'justified')}
                     disabled={isCancelled || !canEdit}
-                    className={`flex flex-col items-center gap-1 p-3 rounded-lg transition-colors ${status === 'justified' ? 'bg-warning text-white' : 'bg-gray-100 text-muted'} disabled:opacity-50 disabled:cursor-not-allowed`}
+                    className={`flex flex-col items-center gap-1 p-3 rounded-lg transition-colors ${status === 'justified' ? 'bg-warning text-white' : 'bg-gray-100 dark:bg-gray-700 text-muted'} disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
                     <span className="material-symbols-outlined">event_note</span>
                     <span className="text-sm font-bold">Justificada</span>
@@ -558,7 +545,7 @@ export const Attendance: React.FC = () => {
 
                 {status === 'justified' && !isCancelled && (
                   <div className="mt-4">
-                    <label className="text-sm font-medium text-text-light block mb-2">
+                    <label className="text-sm font-medium text-text-light dark:text-text-dark block mb-2">
                       Motivo da Justificativa
                     </label>
                     <input
@@ -567,7 +554,7 @@ export const Attendance: React.FC = () => {
                       onChange={(e) => handleJustificationChange(student.id, e.target.value)}
                       disabled={!canEdit}
                       placeholder="Ex: Consulta médica"
-                      className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary disabled:bg-gray-100"
+                      className="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-primary focus:ring-primary disabled:bg-gray-100 dark:bg-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                     />
                   </div>
                 )}
@@ -580,19 +567,19 @@ export const Attendance: React.FC = () => {
       {/* Modal de Cancelamento */}
       {showCancelModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full">
+          <div className="bg-white dark:bg-card-dark rounded-xl p-6 max-w-md w-full">
             <h3 className="text-xl font-bold mb-4 text-red-600">Cancelar Aula</h3>
-            <p className="text-gray-600 mb-4">
+            <p className="text-gray-600 dark:text-gray-100 mb-4">
               Tem certeza que deseja cancelar esta aula? Isso não contará como falta para os alunos.
             </p>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">
                 Motivo do cancelamento
               </label>
               <textarea
                 value={cancelReason}
                 onChange={(e) => setCancelReason(e.target.value)}
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
+                className="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-primary focus:ring-primary bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                 rows={3}
                 placeholder="Ex: Chuva forte, Professor doente..."
               />
@@ -600,7 +587,7 @@ export const Attendance: React.FC = () => {
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowCancelModal(false)}
-                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                className="px-4 py-2 text-gray-600 dark:text-gray-100 hover:bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-800 rounded-lg"
               >
                 Voltar
               </button>
@@ -619,37 +606,37 @@ export const Attendance: React.FC = () => {
       )}
 
       <div className="mt-8">
-        <label className="block text-sm font-medium text-text-light mb-2">
+        <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
           Observações gerais da aula (opcional)
         </label>
         <textarea
           value={generalNotes}
           onChange={(e) => setGeneralNotes(e.target.value)}
-          className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
+          className="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-primary focus:ring-primary bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
           rows={4}
           placeholder="Algum detalhe importante sobre a aula de hoje?"
         />
       </div>
 
       {/* Footer Sticky */}
-      <div className="fixed bottom-0 left-0 lg:left-64 right-0 bg-white/90 backdrop-blur-sm border-t border-border-light p-4 z-40">
+      <div className="fixed bottom-0 left-0 lg:left-64 right-0 bg-white dark:bg-card-dark/90 backdrop-blur-sm border-t border-border-light dark:border-border-dark p-4 z-40">
         <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center gap-4">
           <div className="grid grid-cols-3 gap-8 text-center w-full sm:w-auto">
             <div>
               <p className="font-bold text-lg text-success">{stats.present}</p>
-              <p className="text-xs text-muted">Presentes</p>
+              <p className="text-xs text-muted dark:text-muted-dark">Presentes</p>
             </div>
             <div>
               <p className="font-bold text-lg text-danger">{stats.absent}</p>
-              <p className="text-xs text-muted">Faltas</p>
+              <p className="text-xs text-muted dark:text-muted-dark">Faltas</p>
             </div>
             <div>
               <p className="font-bold text-lg text-warning">{stats.justified}</p>
-              <p className="text-xs text-muted">Justificados</p>
+              <p className="text-xs text-muted dark:text-muted-dark">Justificados</p>
             </div>
           </div>
           <button
-            onClick={handleSaveAttendance}
+            onClick={() => handleSaveAttendance()}
             disabled={saving || students.length === 0 || !canEdit}
             className="w-full sm:w-auto flex-grow h-12 bg-primary text-white rounded-lg font-bold flex items-center justify-center gap-2 shadow hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >

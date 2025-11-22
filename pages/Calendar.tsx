@@ -235,8 +235,8 @@ export const Calendar: React.FC = () => {
                                 <div
                                     key={day}
                                     onClick={() => setSelectedDate(date)}
-                                    className={`relative p-2 border-r border-b border-border-light min-h-[80px] hover:bg-gray-50 transition-colors cursor-pointer ${isSelected(day) ? 'bg-primary/5 ring-2 ring-inset ring-primary z-10' : ''
-                                        } ${isToday(day) ? 'bg-blue-50' : ''}`}
+                                    className={`relative p-2 border-r border-b border-border-light dark:border-border-dark min-h-[80px] hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer ${isSelected(day) ? 'bg-primary/5 dark:bg-primary-dark/10 ring-2 ring-inset ring-primary dark:ring-primary-dark z-10' : ''
+                                        } ${isToday(day) ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}
                                 >
                                     <span className={`text-sm ${isSelected(day) ? 'font-bold text-primary' : isToday(day) ? 'font-bold text-blue-600' : 'text-text-light'}`}>
                                         {day}

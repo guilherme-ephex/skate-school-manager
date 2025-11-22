@@ -177,38 +177,38 @@ export const PermissionsManagement: React.FC = () => {
                 </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="bg-white dark:bg-card-dark rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                 <div className="p-6 border-b border-gray-100">
-                    <h2 className="text-xl font-bold text-gray-800">Configuração de Permissões</h2>
-                    <p className="text-sm text-gray-500">Gerencie o acesso dos professores às funcionalidades do sistema</p>
+                    <h2 className="text-xl font-bold text-gray-800 dark:text-white">Configuração de Permissões</h2>
+                    <p className="text-sm text-gray-500 dark:text-gray-300">Gerencie o acesso dos professores às funcionalidades do sistema</p>
                 </div>
 
                 <div className="overflow-x-auto">
                     <table className="w-full">
-                        <thead className="bg-gray-50 border-b border-gray-100">
+                        <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-100">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 dark:text-gray-100 uppercase tracking-wider">
                                     Permissão
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 dark:text-gray-100 uppercase tracking-wider">
                                     Descrição
                                 </th>
-                                <th className="px-6 py-3 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-center text-xs font-bold text-gray-600 dark:text-gray-100 uppercase tracking-wider">
                                     Administrador
                                 </th>
-                                <th className="px-6 py-3 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-center text-xs font-bold text-gray-600 dark:text-gray-100 uppercase tracking-wider">
                                     Professor
                                 </th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                             {permissionDisplay.map(perm => (
-                                <tr key={perm.key} className="hover:bg-gray-50 transition-colors">
+                                <tr key={perm.key} className="hover:bg-gray-50 dark:bg-gray-800 transition-colors">
                                     <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className="font-bold text-gray-800">{perm.label}</span>
+                                        <span className="font-bold text-gray-800 dark:text-white">{perm.label}</span>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <span className="text-sm text-gray-600">{perm.description}</span>
+                                        <span className="text-sm text-gray-600 dark:text-gray-100">{perm.description}</span>
                                     </td>
                                     <td className="px-6 py-4 text-center">
                                         <div className="flex items-center justify-center">
@@ -223,7 +223,7 @@ export const PermissionsManagement: React.FC = () => {
                                                 onChange={() => togglePermission(perm.key, 'TEACHER')}
                                                 className="sr-only peer"
                                             />
-                                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                            <div className="w-11 h-6 bg-gray-200 dark:bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 dark:after:border-gray-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                                         </label>
                                     </td>
                                 </tr>
@@ -242,7 +242,7 @@ export const PermissionsManagement: React.FC = () => {
                             <button
                                 onClick={fetchPermissions}
                                 disabled={saving}
-                                className="px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-700 font-bold hover:bg-gray-50 transition-colors disabled:opacity-50"
+                                className="px-4 py-2 rounded-lg bg-white dark:bg-card-dark border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-white font-bold hover:bg-gray-50 dark:bg-gray-800 transition-colors disabled:opacity-50"
                             >
                                 Cancelar
                             </button>

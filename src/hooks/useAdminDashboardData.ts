@@ -8,7 +8,18 @@ import {
     DateRange,
 } from '../types/dashboard';
 import { getStudentsAtRisk, formatRelativeTime } from '../utils/attendanceUtils';
-import { ClassLevel } from '../types/database';
+import { ClassLevel, Notice } from '../types/database';
+import { startOfMonth, eachDayOfInterval, subDays, getDay, format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+
+export interface PendingAttendanceItem {
+    classId: string;
+    className: string;
+    date: string;
+    dateFormatted: string;
+    teacherName: string;
+    dayOfWeek: string;
+}
 
 interface UseAdminDashboardDataReturn {
     loading: boolean;
@@ -21,6 +32,9 @@ interface UseAdminDashboardDataReturn {
     totalActivities: number;
     currentPage: number;
     itemsPerPage: number;
+    pendingAttendanceCount: number;
+    pendingAttendanceList: PendingAttendanceItem[];
+    notices: Notice[];
     setCurrentPage: (page: number) => void;
 }
 
@@ -47,6 +61,9 @@ export function useAdminDashboardData(): UseAdminDashboardDataReturn {
     const [allActivities, setAllActivities] = useState<RecentActivity[]>([]);
     const [dateRange, setDateRange] = useState<DateRange>({ start: '', end: '' });
     const [currentPage, setCurrentPage] = useState(1);
+    const [pendingAttendanceCount, setPendingAttendanceCount] = useState(0);
+    const [pendingAttendanceList, setPendingAttendanceList] = useState<PendingAttendanceItem[]>([]);
+    const [notices, setNotices] = useState<Notice[]>([]);
     const itemsPerPage = 5;
 
     useEffect(() => {
@@ -64,11 +81,15 @@ export function useAdminDashboardData(): UseAdminDashboardDataReturn {
                 weeklyData,
                 distributionData,
                 activitiesData,
+                pendingList,
+                noticesData,
             ] = await Promise.all([
                 fetchStats(),
                 fetchWeeklyAttendance(),
                 fetchClassDistribution(),
                 fetchRecentActivities(),
+                fetchPendingAttendance(),
+                fetchNotices(),
             ]);
 
             setStats(statsData);
@@ -76,6 +97,9 @@ export function useAdminDashboardData(): UseAdminDashboardDataReturn {
             setDateRange(weeklyData.range);
             setClassDistribution(distributionData);
             setAllActivities(activitiesData);
+            setPendingAttendanceCount(pendingList.length);
+            setPendingAttendanceList(pendingList);
+            setNotices(noticesData);
         } catch (err) {
             console.error('Error fetching dashboard data:', err);
             setError('Erro ao carregar dados do dashboard');
@@ -228,6 +252,25 @@ export function useAdminDashboardData(): UseAdminDashboardDataReturn {
             return [];
         }
 
+        // 1. Fetch Actor Profiles (Users who performed the action)
+        const actorIds = Array.from(new Set(data.map(log => log.user_id).filter(id => id)));
+        let actorProfiles: Record<string, string> = {};
+        
+        if (actorIds.length > 0) {
+            const { data: profilesData } = await supabase
+                .from('profiles')
+                .select('id, full_name')
+                .in('id', actorIds);
+            
+            if (profilesData) {
+                actorProfiles = profilesData.reduce((acc, p) => {
+                    // Get first name only for cleaner UI
+                    acc[p.id] = p.full_name?.split(' ')[0] || 'Usuário';
+                    return acc;
+                }, {} as Record<string, string>);
+            }
+        }
+
         // For attendance logs, fetch additional details
         const attendanceLogIds = data
             .filter(log => log.entity_type === 'attendance' && log.entity_id)
@@ -266,6 +309,10 @@ export function useAdminDashboardData(): UseAdminDashboardDataReturn {
                 let icon = 'info';
                 let color = 'bg-gray-100 text-gray-600';
 
+                // Get Actor Name (who performed the action)
+                const actorName = actorProfiles[log.user_id] || log.user_email?.split('@')[0] || 'Sistema';
+                const byUserText = ` por ${actorName}`;
+
                 // Parse details if it's a string
                 let details = log.details;
                 if (typeof details === 'string') {
@@ -276,11 +323,11 @@ export function useAdminDashboardData(): UseAdminDashboardDataReturn {
                     }
                 }
 
-                // Get name from details or use fallback
+                // Get name of the entity affected
                 const getName = () => {
                     if (details?.full_name) return details.full_name;
                     if (details?.name) return details.name;
-                    if (log.user_email) return log.user_email.split('@')[0];
+                    if (log.user_email && log.entity_type !== 'attendance') return log.user_email.split('@')[0];
                     return null;
                 };
 
@@ -290,58 +337,58 @@ export function useAdminDashboardData(): UseAdminDashboardDataReturn {
                 if (log.entity_type === 'students') {
                     if (log.action === 'INSERT') {
                         type = 'enrollment';
-                        text = name ? `Aluno registrado: ${name}` : 'Novo aluno registrado';
+                        text = name ? `Aluno registrado: ${name}${byUserText}` : `Novo aluno registrado${byUserText}`;
                         icon = 'person_add';
                         color = 'bg-green-100 text-green-600';
                     } else if (log.action === 'UPDATE') {
                         type = 'student';
-                        text = name ? `Dados do aluno ${name} atualizados` : 'Dados de aluno atualizados';
+                        text = name ? `Dados de ${name} atualizados${byUserText}` : `Dados de aluno atualizados${byUserText}`;
                         icon = 'edit';
                         color = 'bg-blue-100 text-blue-600';
                     } else if (log.action === 'DELETE') {
                         type = 'student';
-                        text = name ? `Aluno ${name} removido` : 'Aluno removido do sistema';
+                        text = name ? `Aluno ${name} removido${byUserText}` : `Aluno removido${byUserText}`;
                         icon = 'person_remove';
                         color = 'bg-red-100 text-red-600';
                     }
                 } else if (log.entity_type === 'classes') {
                     if (log.action === 'INSERT') {
                         type = 'class';
-                        text = name ? `Nova turma criada: ${name}` : 'Nova turma criada';
+                        text = name ? `Nova turma criada: ${name}${byUserText}` : `Nova turma criada${byUserText}`;
                         icon = 'add_box';
                         color = 'bg-purple-100 text-purple-600';
                     } else if (log.action === 'UPDATE') {
                         type = 'class';
-                        text = name ? `Turma ${name} atualizada` : 'Turma atualizada';
+                        text = name ? `Turma ${name} atualizada${byUserText}` : `Turma atualizada${byUserText}`;
                         icon = 'edit';
                         color = 'bg-blue-100 text-blue-600';
                     } else if (log.action === 'DELETE') {
                         type = 'class';
-                        text = name ? `Turma ${name} removida` : 'Turma removida';
+                        text = name ? `Turma ${name} removida${byUserText}` : `Turma removida${byUserText}`;
                         icon = 'delete';
                         color = 'bg-red-100 text-red-600';
                     }
                 } else if (log.entity_type === 'profiles') {
                     if (log.action === 'INSERT') {
                         type = 'enrollment';
-                        text = name ? `Novo usuário: ${name}` : 'Novo usuário cadastrado';
+                        text = name ? `Novo usuário: ${name}${byUserText}` : `Novo usuário cadastrado${byUserText}`;
                         icon = 'person_add';
                         color = 'bg-green-100 text-green-600';
                     } else if (log.action === 'UPDATE') {
                         type = 'student';
-                        text = name ? `Perfil de ${name} atualizado` : 'Perfil atualizado';
+                        text = name ? `Perfil de ${name} atualizado${byUserText}` : `Perfil atualizado${byUserText}`;
                         icon = 'edit';
                         color = 'bg-blue-100 text-blue-600';
                     }
                 } else if (log.entity_type === 'enrollments') {
                     if (log.action === 'INSERT') {
                         type = 'enrollment';
-                        text = name ? `${name} matriculado em turma` : 'Nova matrícula realizada';
+                        text = name ? `${name} matriculado em turma${byUserText}` : `Nova matrícula realizada${byUserText}`;
                         icon = 'how_to_reg';
                         color = 'bg-green-100 text-green-600';
                     } else if (log.action === 'DELETE') {
                         type = 'alert';
-                        text = name ? `${name} removido de turma` : 'Matrícula cancelada';
+                        text = name ? `${name} removido de turma${byUserText}` : `Matrícula cancelada${byUserText}`;
                         icon = 'person_remove';
                         color = 'bg-orange-100 text-orange-600';
                     }
@@ -353,13 +400,29 @@ export function useAdminDashboardData(): UseAdminDashboardDataReturn {
                     // Get detailed attendance information
                     const attDetails = attendanceDetails[log.entity_id];
                     if (attDetails) {
-                        const teacherName = attDetails.profiles?.full_name || log.user_email?.split('@')[0] || 'Professor';
+                        const teacherName = attDetails.profiles?.full_name || actorName || 'Professor';
                         const className = attDetails.classes?.name || 'Turma';
-                        const dateFormatted = new Date(attDetails.date).toLocaleDateString('pt-BR');
+                        // Parse date safely and format dd/MM/yyyy
+                        const dateParts = attDetails.date.split('-');
+                        const dateFormatted = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
                         
-                        text = `Chamada registrada: ${className} (${dateFormatted}) por ${teacherName}`;
+                        text = `Chamada da turma ${className} (${dateFormatted}) registrada por ${teacherName}`;
                     } else {
-                        text = 'Chamada registrada';
+                        text = `Chamada registrada${byUserText}`;
+                    }
+                } else if (log.entity_type === 'notices') {
+                    if (log.action === 'INSERT') {
+                        text = name ? `Aviso criado: ${name}${byUserText}` : `Novo aviso criado${byUserText}`;
+                        icon = 'campaign';
+                        color = 'bg-indigo-100 text-indigo-600';
+                    } else if (log.action === 'UPDATE') {
+                        text = name ? `Aviso atualizado: ${name}${byUserText}` : `Aviso atualizado${byUserText}`;
+                        icon = 'edit_note';
+                        color = 'bg-indigo-100 text-indigo-600';
+                    } else if (log.action === 'DELETE') {
+                        text = `Aviso removido${byUserText}`;
+                        icon = 'delete';
+                        color = 'bg-red-100 text-red-600';
                     }
                 } else {
                     // Generic fallback for unknown types
@@ -367,6 +430,7 @@ export function useAdminDashboardData(): UseAdminDashboardDataReturn {
                         'role_permissions': 'Permissões',
                         'notices': 'Avisos',
                         'audit_logs': 'Logs',
+                        'app_settings': 'Configurações',
                     };
 
                     const actionMap: Record<string, string> = {
@@ -378,7 +442,7 @@ export function useAdminDashboardData(): UseAdminDashboardDataReturn {
                     const entityName = entityMap[log.entity_type] || log.entity_type;
                     const actionName = actionMap[log.action] || log.action.toLowerCase();
 
-                    text = `${entityName} ${actionName}`;
+                    text = `${entityName} ${actionName}${byUserText}`;
                     icon = 'info';
                     color = 'bg-gray-100 text-gray-600';
                 }
@@ -402,6 +466,110 @@ export function useAdminDashboardData(): UseAdminDashboardDataReturn {
         return activities;
     }
 
+    async function fetchPendingAttendance(): Promise<PendingAttendanceItem[]> {
+        const today = new Date();
+        const startOfCurrentMonth = startOfMonth(today);
+        
+        // Get all days from start of month until yesterday
+        const daysInMonthUntilYesterday = eachDayOfInterval({
+            start: startOfCurrentMonth,
+            end: subDays(today, 1)
+        });
+
+        // Fetch all classes with teacher info
+        const { data: allClasses, error: classesError } = await supabase
+            .from('classes')
+            .select('id, name, days, teacher_id, profiles:teacher_id(full_name)');
+        
+        if (classesError || !allClasses) {
+            console.error('Error fetching classes:', classesError);
+            return [];
+        }
+
+        // Fetch all attendance for current month
+        const { data: attendanceRecords, error: attendanceError } = await supabase
+            .from('attendance')
+            .select('class_id, date, is_cancelled')
+            .gte('date', format(startOfCurrentMonth, 'yyyy-MM-dd'))
+            .lt('date', format(today, 'yyyy-MM-dd'));
+        
+        if (attendanceError) {
+            console.error('Error fetching attendance:', attendanceError);
+            return [];
+        }
+
+        // Map to track which class/date combinations have attendance
+        const attendanceMap = new Map<string, boolean>();
+        attendanceRecords?.forEach(record => {
+            const key = `${record.class_id}-${record.date}`;
+            attendanceMap.set(key, record.is_cancelled || false);
+        });
+
+        // Day mapping: 0=Sunday, 1=Monday, etc
+        const dayMap: Record<number, string[]> = {
+            0: ['domingo', 'dom'],
+            1: ['segunda', 'seg'],
+            2: ['terça', 'ter', 'terca'],
+            3: ['quarta', 'qua'],
+            4: ['quinta', 'qui'],
+            5: ['sexta', 'sex'],
+            6: ['sábado', 'sab', 'sabado']
+        };
+
+        const pendingList: PendingAttendanceItem[] = [];
+
+        // Check each day
+        for (const day of daysInMonthUntilYesterday) {
+            const dayOfWeek = getDay(day);
+            const dayStr = format(day, 'yyyy-MM-dd');
+            
+            // Find classes that should have happened on this day
+            const classesOnDay = allClasses.filter((cls: any) => 
+                cls.days?.some((d: string) => 
+                    dayMap[dayOfWeek].some(pd => d.toLowerCase().includes(pd))
+                )
+            );
+
+            // Check if each class has attendance
+            for (const cls of classesOnDay) {
+                const key = `${cls.id}-${dayStr}`;
+                const hasAttendance = attendanceMap.has(key);
+                const wasCancelled = attendanceMap.get(key);
+
+                // If no attendance record OR if it exists but was cancelled
+                if (!hasAttendance || (hasAttendance && !wasCancelled)) {
+                    if (!hasAttendance) {
+                        pendingList.push({
+                            classId: cls.id,
+                            className: cls.name,
+                            date: dayStr,
+                            dateFormatted: format(day, 'dd/MM/yyyy'),
+                            teacherName: cls.profiles?.full_name || 'Sem professor',
+                            dayOfWeek: format(day, 'EEEE', { locale: ptBR })
+                        });
+                    }
+                }
+            }
+        }
+
+        return pendingList;
+    }
+
+    async function fetchNotices(): Promise<Notice[]> {
+        const { data, error } = await supabase
+            .from('notices')
+            .select('*')
+            .eq('active', true)
+            .order('created_at', { ascending: false });
+        
+        if (error) {
+            console.error('Error fetching notices:', error);
+            return [];
+        }
+
+        return data as Notice[];
+    }
+
     // Calculate paginated activities
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
@@ -418,6 +586,9 @@ export function useAdminDashboardData(): UseAdminDashboardDataReturn {
         totalActivities: allActivities.length,
         currentPage,
         itemsPerPage,
+        pendingAttendanceCount,
+        pendingAttendanceList,
+        notices,
         setCurrentPage,
     };
 }

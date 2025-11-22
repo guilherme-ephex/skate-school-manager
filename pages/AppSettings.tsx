@@ -8,7 +8,9 @@ export const AppSettings: React.FC = () => {
     const [saving, setSaving] = useState(false);
     const [appName, setAppName] = useState('Skate School Manager');
     const [logoUrl, setLogoUrl] = useState<string>('');
+    const [faviconUrl, setFaviconUrl] = useState<string>('');
     const [uploadingLogo, setUploadingLogo] = useState(false);
+    const [uploadingFavicon, setUploadingFavicon] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
 
     useEffect(() => {
@@ -19,15 +21,19 @@ export const AppSettings: React.FC = () => {
         try {
             setLoading(true);
             const settings = await api.getAppSettings();
-            
+
             const nameSettings = settings.find(s => s.setting_key === 'app_name');
             const logoSettings = settings.find(s => s.setting_key === 'app_logo_url');
+            const faviconSettings = settings.find(s => s.setting_key === 'app_favicon_url');
 
             if (nameSettings?.setting_value) {
                 setAppName(nameSettings.setting_value);
             }
             if (logoSettings?.setting_value) {
                 setLogoUrl(logoSettings.setting_value);
+            }
+            if (faviconSettings?.setting_value) {
+                setFaviconUrl(faviconSettings.setting_value);
             }
         } catch (err) {
             console.error('Error loading settings:', err);
@@ -45,12 +51,13 @@ export const AppSettings: React.FC = () => {
             await Promise.all([
                 api.updateAppSetting('app_name', appName),
                 api.updateAppSetting('app_logo_url', logoUrl),
+                api.updateAppSetting('app_favicon_url', faviconUrl),
             ]);
 
             setSuccessMessage('Configurações salvas com sucesso! A página será recarregada.');
             setTimeout(() => {
                 setSuccessMessage('');
-                window.location.reload(); // Reload to update logo/name in sidebar
+                window.location.reload(); // Reload to update logo/name/favicon
             }, 2000);
         } catch (err) {
             console.error('Error saving settings:', err);
@@ -112,6 +119,58 @@ export const AppSettings: React.FC = () => {
         setLogoUrl('');
     };
 
+    const handleFaviconUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            alert('Por favor, selecione uma imagem válida');
+            return;
+        }
+
+        // Validate file size (max 1MB for favicon)
+        if (file.size > 1 * 1024 * 1024) {
+            alert('O favicon deve ter no máximo 1MB');
+            return;
+        }
+
+        try {
+            setUploadingFavicon(true);
+
+            // Generate unique file name
+            const fileExt = file.name.split('.').pop();
+            const fileName = `favicon-${Date.now()}.${fileExt}`;
+            const filePath = `favicons/${fileName}`;
+
+            // Upload to Supabase Storage
+            const { data, error } = await supabase.storage
+                .from('public')
+                .upload(filePath, file, {
+                    cacheControl: '3600',
+                    upsert: false
+                });
+
+            if (error) throw error;
+
+            // Get public URL
+            const { data: urlData } = supabase.storage
+                .from('public')
+                .getPublicUrl(filePath);
+
+            setFaviconUrl(urlData.publicUrl);
+        } catch (err) {
+            console.error('Error uploading favicon:', err);
+            alert('Erro ao fazer upload do favicon. Tente novamente.');
+        } finally {
+            setUploadingFavicon(false);
+        }
+    };
+
+    const handleRemoveFavicon = () => {
+        setFaviconUrl('');
+    };
+
     if (loading) {
         return (
             <div className="flex justify-center items-center h-96">
@@ -132,10 +191,10 @@ export const AppSettings: React.FC = () => {
             )}
 
             {/* Settings Form */}
-            <div className="bg-card-light rounded-xl border border-border-light shadow-sm p-6 space-y-8">
+            <div className="bg-card-light dark:bg-card-dark rounded-xl border border-border-light dark:border-border-dark shadow-sm p-6 space-y-8">
                 {/* App Name Section */}
                 <div>
-                    <label className="block text-sm font-bold text-text-light mb-2">
+                    <label className="block text-sm font-bold text-text-light dark:text-text-dark mb-2">
                         Nome do Aplicativo
                     </label>
                     <input
@@ -143,31 +202,31 @@ export const AppSettings: React.FC = () => {
                         value={appName}
                         onChange={(e) => setAppName(e.target.value)}
                         placeholder="Ex: Skate School Manager"
-                        className="w-full px-4 py-3 border border-border-light rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        className="w-full px-4 py-3 border border-border-light dark:border-border-dark rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                     />
-                    <p className="text-xs text-muted mt-2">
+                    <p className="text-xs text-muted dark:text-muted-dark mt-2">
                         Este nome será exibido no topo da barra lateral e em outros locais do sistema.
                     </p>
                 </div>
 
                 {/* Logo Section */}
                 <div>
-                    <label className="block text-sm font-bold text-text-light mb-2">
+                    <label className="block text-sm font-bold text-text-light dark:text-text-dark mb-2">
                         Logomarca do Aplicativo
                     </label>
-                    
+
                     <div className="space-y-4">
                         {/* Logo Preview */}
                         {logoUrl ? (
-                            <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg border border-border-light">
-                                <img 
-                                    src={logoUrl} 
-                                    alt="Logo do aplicativo" 
-                                    className="w-20 h-20 object-contain rounded-lg border border-gray-200 bg-white"
+                            <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-border-light dark:border-border-dark">
+                                <img
+                                    src={logoUrl}
+                                    alt="Logo do aplicativo"
+                                    className="w-20 h-20 object-contain rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-card-dark"
                                 />
                                 <div className="flex-grow">
-                                    <p className="text-sm font-bold text-text-light">Logo atual</p>
-                                    <p className="text-xs text-muted mt-1">Dimensões recomendadas: 200x200px</p>
+                                    <p className="text-sm font-bold text-text-light dark:text-text-dark">Logo atual</p>
+                                    <p className="text-xs text-muted dark:text-muted-dark mt-1">Dimensões recomendadas: 200x200px</p>
                                 </div>
                                 <button
                                     onClick={handleRemoveLogo}
@@ -177,10 +236,10 @@ export const AppSettings: React.FC = () => {
                                 </button>
                             </div>
                         ) : (
-                            <div className="flex items-center justify-center p-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                            <div className="flex items-center justify-center p-8 bg-gray-50 dark:bg-gray-800 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600">
                                 <div className="text-center">
-                                    <span className="material-symbols-outlined text-4xl text-muted mb-2">image</span>
-                                    <p className="text-sm text-muted">Nenhuma logo configurada</p>
+                                    <span className="material-symbols-outlined text-4xl text-muted dark:text-muted-dark mb-2">image</span>
+                                    <p className="text-sm text-muted dark:text-muted-dark">Nenhuma logo configurada</p>
                                 </div>
                             </div>
                         )}
@@ -197,9 +256,8 @@ export const AppSettings: React.FC = () => {
                             />
                             <label
                                 htmlFor="logo-upload"
-                                className={`flex items-center justify-center gap-2 w-full px-4 py-3 bg-white border-2 border-primary text-primary rounded-lg font-bold hover:bg-primary hover:text-white transition-colors cursor-pointer ${
-                                    uploadingLogo ? 'opacity-50 cursor-not-allowed' : ''
-                                }`}
+                                className={`flex items-center justify-center gap-2 w-full px-4 py-3 bg-white border-2 border-primary text-primary rounded-lg font-bold hover:bg-primary hover:text-white transition-colors cursor-pointer ${uploadingLogo ? 'opacity-50 cursor-not-allowed' : ''
+                                    }`}
                             >
                                 {uploadingLogo ? (
                                     <>
@@ -215,14 +273,84 @@ export const AppSettings: React.FC = () => {
                             </label>
                         </div>
 
-                        <p className="text-xs text-muted">
+                        <p className="text-xs text-muted dark:text-muted-dark">
                             Formatos aceitos: PNG, JPG, SVG. Tamanho máximo: 2MB.
                         </p>
                     </div>
                 </div>
 
+                {/* Favicon Section */}
+                <div>
+                    <label className="block text-sm font-bold text-text-light dark:text-text-dark mb-2">
+                        Favicon do Aplicativo
+                    </label>
+
+                    <div className="space-y-4">
+                        {/* Favicon Preview */}
+                        {faviconUrl ? (
+                            <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-border-light dark:border-border-dark">
+                                <img
+                                    src={faviconUrl}
+                                    alt="Favicon do aplicativo"
+                                    className="w-16 h-16 object-contain rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-card-dark"
+                                />
+                                <div className="flex-grow">
+                                    <p className="text-sm font-bold text-text-light dark:text-text-dark">Favicon atual</p>
+                                    <p className="text-xs text-muted dark:text-muted-dark mt-1">Dimensões recomendadas: 32x32px ou 64x64px</p>
+                                </div>
+                                <button
+                                    onClick={handleRemoveFavicon}
+                                    className="px-4 py-2 text-red-600 border border-red-300 rounded-lg hover:bg-red-50 font-bold text-sm transition-colors"
+                                >
+                                    Remover
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="flex items-center justify-center p-8 bg-gray-50 dark:bg-gray-800 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600">
+                                <div className="text-center">
+                                    <span className="material-symbols-outlined text-4xl text-muted dark:text-muted-dark mb-2">tab</span>
+                                    <p className="text-sm text-muted dark:text-muted-dark">Nenhum favicon configurado</p>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Upload Button */}
+                        <div className="relative">
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={handleFaviconUpload}
+                                disabled={uploadingFavicon}
+                                className="hidden"
+                                id="favicon-upload"
+                            />
+                            <label
+                                htmlFor="favicon-upload"
+                                className={`flex items-center justify-center gap-2 w-full px-4 py-3 bg-white border-2 border-primary text-primary rounded-lg font-bold hover:bg-primary hover:text-white transition-colors cursor-pointer ${uploadingFavicon ? 'opacity-50 cursor-not-allowed' : ''
+                                    }`}
+                            >
+                                {uploadingFavicon ? (
+                                    <>
+                                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
+                                        Fazendo upload...
+                                    </>
+                                ) : (
+                                    <>
+                                        <span className="material-symbols-outlined">upload</span>
+                                        {faviconUrl ? 'Alterar Favicon' : 'Fazer Upload do Favicon'}
+                                    </>
+                                )}
+                            </label>
+                        </div>
+
+                        <p className="text-xs text-muted dark:text-muted-dark">
+                            Formatos aceitos: PNG, ICO, SVG. Tamanho máximo: 1MB. Recomenda-se usar imagens quadradas (32x32px ou 64x64px).
+                        </p>
+                    </div>
+                </div>
+
                 {/* Save Button */}
-                <div className="flex items-center justify-end gap-3 pt-6 border-t border-border-light">
+                <div className="flex items-center justify-end gap-3 pt-6 border-t border-border-light dark:border-border-dark">
                     <button
                         onClick={handleSaveSettings}
                         disabled={saving}
@@ -252,6 +380,7 @@ export const AppSettings: React.FC = () => {
                         <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
                             <li>As alterações serão aplicadas imediatamente para todos os usuários.</li>
                             <li>A logo será exibida na barra lateral e em relatórios exportados.</li>
+                            <li>O favicon aparecerá na aba do navegador.</li>
                             <li>Utilize uma imagem quadrada para melhor visualização.</li>
                         </ul>
                     </div>

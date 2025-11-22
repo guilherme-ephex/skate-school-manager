@@ -211,17 +211,17 @@ export const AttendanceHistory: React.FC = () => {
     return (
         <div className="max-w-6xl mx-auto p-6">
             <div className="flex justify-between items-center mb-8">
-                <h1 className="text-3xl font-bold text-text-light">Histórico de Chamadas</h1>
+                <h1 className="text-3xl font-bold text-text-light dark:text-text-dark">Histórico de Chamadas</h1>
             </div>
 
             {/* Filtros */}
-            <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 mb-6 flex flex-wrap gap-4 items-end">
+            <div className="bg-white dark:bg-card-dark rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700 mb-6 flex flex-wrap gap-4 items-end">
                 <div className="flex-1 min-w-[200px]">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Turma</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">Turma</label>
                     <select
                         value={selectedClass}
                         onChange={(e) => setSelectedClass(e.target.value)}
-                        className="w-full rounded-lg border-gray-300 focus:border-primary focus:ring-primary"
+                        className="w-full rounded-lg border-gray-300 dark:border-gray-600 focus:border-primary focus:ring-primary bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                     >
                         <option value="">Todas as Turmas</option>
                         {classes.map(cls => (
@@ -230,21 +230,21 @@ export const AttendanceHistory: React.FC = () => {
                     </select>
                 </div>
                 <div className="w-40">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Data Início</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">Data Início</label>
                     <input
                         type="date"
                         value={startDate}
                         onChange={(e) => setStartDate(e.target.value)}
-                        className="w-full rounded-lg border-gray-300 focus:border-primary focus:ring-primary"
+                        className="w-full rounded-lg border-gray-300 dark:border-gray-600 focus:border-primary focus:ring-primary bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                     />
                 </div>
                 <div className="w-40">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Data Fim</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">Data Fim</label>
                     <input
                         type="date"
                         value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
-                        className="w-full rounded-lg border-gray-300 focus:border-primary focus:ring-primary"
+                        className="w-full rounded-lg border-gray-300 dark:border-gray-600 focus:border-primary focus:ring-primary bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                     />
                 </div>
                 <button
@@ -256,42 +256,42 @@ export const AttendanceHistory: React.FC = () => {
             </div>
 
             {/* Tabela */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-white dark:bg-card-dark rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
-                        <thead className="bg-gray-50 border-b border-gray-200">
+                        <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
                             <tr>
-                                <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Data</th>
-                                <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Turma</th>
-                                <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Professor</th>
-                                <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
-                                <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Resumo</th>
-                                <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Ações</th>
+                                <th className="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Data</th>
+                                <th className="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Turma</th>
+                                <th className="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Professor</th>
+                                <th className="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                                <th className="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Resumo</th>
+                                <th className="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider text-right">Ações</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200">
                             {loading ? (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500 dark:text-gray-300">
                                         Carregando...
                                     </td>
                                 </tr>
                             ) : historyData.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500 dark:text-gray-300">
                                         Nenhum registro encontrado para os filtros selecionados.
                                     </td>
                                 </tr>
                             ) : (
                                 historyData.map((item, index) => (
-                                    <tr key={`${item.class_id}-${item.date}-${index}`} className="hover:bg-gray-50 transition-colors">
+                                    <tr key={`${item.class_id}-${item.date}-${index}`} className="hover:bg-gray-50 dark:bg-gray-800 transition-colors">
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                             {formatDate(item.date)}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
                                             {item.class_name} <span className="text-xs text-gray-400">({item.class_level})</span>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
                                             {item.teacher_name}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
@@ -305,7 +305,7 @@ export const AttendanceHistory: React.FC = () => {
                                                 </span>
                                             )}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
                                             {!item.is_cancelled && (
                                                 <div className="flex gap-2 text-xs">
                                                     <span className="text-green-600 font-bold">{item.total_present} P</span>
@@ -343,21 +343,21 @@ export const AttendanceHistory: React.FC = () => {
             {/* Modal de Histórico de Alterações */}
             {showHistoryModal && selectedAttendance && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[80vh] flex flex-col">
+                    <div className="bg-white dark:bg-card-dark rounded-xl p-6 max-w-2xl w-full max-h-[80vh] flex flex-col">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-xl font-bold text-gray-900">
                                 Histórico de Alterações - {formatDate(selectedAttendance.date)}
                             </h3>
-                            <button onClick={() => setShowHistoryModal(false)} className="text-gray-400 hover:text-gray-600">
+                            <button onClick={() => setShowHistoryModal(false)} className="text-gray-400 hover:text-gray-600 dark:text-gray-100">
                                 <span className="material-symbols-outlined">close</span>
                             </button>
                         </div>
 
                         <div className="flex-1 overflow-y-auto">
                             {loadingLogs ? (
-                                <div className="text-center py-8 text-gray-500">Carregando logs...</div>
+                                <div className="text-center py-8 text-gray-500 dark:text-gray-300">Carregando logs...</div>
                             ) : auditLogs.length === 0 ? (
-                                <div className="text-center py-8 text-gray-500">Nenhuma alteração registrada.</div>
+                                <div className="text-center py-8 text-gray-500 dark:text-gray-300">Nenhuma alteração registrada.</div>
                             ) : (
                                 <div className="space-y-4">
                                     {auditLogs.map(log => {
@@ -377,9 +377,9 @@ export const AttendanceHistory: React.FC = () => {
                                         };
 
                                         return (
-                                            <div key={log.id} className="border-l-2 border-gray-200 pl-4 py-2">
+                                            <div key={log.id} className="border-l-2 border-gray-200 dark:border-gray-700 pl-4 py-2">
                                                 <div className="flex justify-between items-start">
-                                                    <span className="text-xs font-bold text-gray-500">
+                                                    <span className="text-xs font-bold text-gray-500 dark:text-gray-300">
                                                         {formatDateTime(log.changed_at)}
                                                     </span>
                                                     <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${log.action === 'INSERT' || log.action === 'created' ? 'bg-green-100 text-green-800' :
@@ -396,12 +396,12 @@ export const AttendanceHistory: React.FC = () => {
                                                         {log.student_avatar ? (
                                                             <img src={log.student_avatar} alt={log.student_name || 'Aluno'} className="w-full h-full object-cover" />
                                                         ) : (
-                                                            <span className="text-xs font-bold text-gray-600">
+                                                            <span className="text-xs font-bold text-gray-600 dark:text-gray-100">
                                                                 {log.student_name?.split(' ').map(n => n[0]).join('').slice(0, 2) || 'AL'}
                                                             </span>
                                                         )}
                                                     </div>
-                                                    <p className="text-sm text-gray-800">
+                                                    <p className="text-sm text-gray-800 dark:text-white">
                                                         Aluno: <span className="font-bold">{log.student_name || 'Desconhecido'}</span>
                                                     </p>
                                                 </div>
@@ -412,20 +412,20 @@ export const AttendanceHistory: React.FC = () => {
                                                         {log.changer_avatar ? (
                                                             <img src={log.changer_avatar} alt={log.changer_name || 'Sistema'} className="w-full h-full object-cover" />
                                                         ) : (
-                                                            <span className="text-xs font-bold text-gray-600">
+                                                            <span className="text-xs font-bold text-gray-600 dark:text-gray-100">
                                                                 {log.changer_name?.split(' ').map(n => n[0]).join('').slice(0, 2) || 'SY'}
                                                             </span>
                                                         )}
                                                     </div>
-                                                    <p className="text-sm text-gray-600">
+                                                    <p className="text-sm text-gray-600 dark:text-gray-100">
                                                         Por: <span className="font-medium">{log.changer_name || 'Sistema'}</span>
                                                     </p>
                                                 </div>
 
-                                                <div className="mt-2 text-xs bg-gray-50 p-2 rounded">
+                                                <div className="mt-2 text-xs bg-gray-50 dark:bg-gray-800 p-2 rounded">
                                                     {log.old_status !== log.new_status && (
                                                         <div className="flex gap-2">
-                                                            <span className="text-gray-500">Status:</span>
+                                                            <span className="text-gray-500 dark:text-gray-300">Status:</span>
                                                             <span className="line-through text-red-400">{statusLabels[log.old_status || ''] || log.old_status || 'N/A'}</span>
                                                             <span className="text-gray-400">→</span>
                                                             <span className="font-bold text-green-600">{statusLabels[log.new_status || ''] || log.new_status || 'N/A'}</span>
@@ -433,7 +433,7 @@ export const AttendanceHistory: React.FC = () => {
                                                     )}
                                                     {log.old_is_cancelled !== log.new_is_cancelled && (
                                                         <div className="flex gap-2 mt-1">
-                                                            <span className="text-gray-500">Cancelado:</span>
+                                                            <span className="text-gray-500 dark:text-gray-300">Cancelado:</span>
                                                             <span className="line-through text-red-400">{log.old_is_cancelled ? 'Sim' : 'Não'}</span>
                                                             <span className="text-gray-400">→</span>
                                                             <span className="font-bold text-green-600">{log.new_is_cancelled ? 'Sim' : 'Não'}</span>

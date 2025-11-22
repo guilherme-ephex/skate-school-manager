@@ -1,61 +1,70 @@
 <!DOCTYPE html>
 <html lang="pt-BR" class="light">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Skate School</title>
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com" rel="preconnect" />
-    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
-      rel="stylesheet"
-    />
-    <script>
-      tailwind.config = {
-        darkMode: "class",
-        theme: {
-          extend: {
-            colors: {
-              primary: "#0f3c5c",
-              "background-light": "#f6f7f8",
-              "background-dark": "#121a20",
-              "card-light": "#FFFFFF",
-              "text-light": "#1A202C",
-              "border-light": "#E2E8F0",
-              muted: "#718096",
-              success: "#16a34a",
-              danger: "#dc2626",
-              warning: "#f59e0b",
-            },
-            fontFamily: {
-              display: ["Lexend", "sans-serif"],
-            },
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Skate School</title>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" id="favicon" />
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com" rel="preconnect" />
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#0f3c5c",
+            "primary-dark": "#60a5fa", // Azul claro e vibrante para dark mode
+            "background-light": "#f6f7f8",
+            "background-dark": "#0f1419",
+            "card-light": "#FFFFFF",
+            "card-dark": "#1a2632",
+            "text-light": "#1A202C",
+            "text-dark": "#ffffff",
+            "border-light": "#E2E8F0",
+            "border-dark": "#2d3748",
+            "input-dark": "#2d3748",
+            muted: "#718096",
+            "muted-dark": "#cbd5e1",
+            success: "#16a34a",
+            danger: "#dc2626",
+            warning: "#f59e0b",
+          },
+          fontFamily: {
+            display: ["Lexend", "sans-serif"],
           },
         },
-      };
-    </script>
-    <style>
-      .material-symbols-outlined {
-        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-      }
-      .material-symbols-outlined.fill {
-        font-variation-settings: 'FILL' 1;
-      }
-      /* Hide scrollbar for Chrome, Safari and Opera */
-      .no-scrollbar::-webkit-scrollbar {
-          display: none;
-      }
-      /* Hide scrollbar for IE, Edge and Firefox */
-      .no-scrollbar {
-          -ms-overflow-style: none;  /* IE and Edge */
-          scrollbar-width: none;  /* Firefox */
-      }
-    </style>
+      },
+    };
+  </script>
+  <style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+
+    .material-symbols-outlined.fill {
+      font-variation-settings: 'FILL' 1;
+    }
+
+    /* Hide scrollbar for Chrome, Safari and Opera */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* Hide scrollbar for IE, Edge and Firefox */
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      /* IE and Edge */
+      scrollbar-width: none;
+      /* Firefox */
+    }
+  </style>
   <script type="importmap">
 {
   "imports": {
@@ -67,10 +76,13 @@
   }
 }
 </script>
-<link rel="stylesheet" href="/index.css">
+  <link rel="stylesheet" href="/index.css">
 </head>
-  <body class="bg-background-light text-text-light font-display">
-    <div id="root"></div>
+
+<body
+  class="bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark font-display transition-colors">
+  <div id="root"></div>
   <script type="module" src="/index.tsx"></script>
 </body>
+
 </html>
