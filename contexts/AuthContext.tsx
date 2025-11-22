@@ -31,11 +31,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Fetch user profile
             const { data: profile, error: profileError } = await supabase
                 .from('profiles')
-                .select('id, full_name, avatar_url, role')
+                .select('id, full_name, avatar_url, role, status')
                 .eq('id', authUser.id)
                 .single();
 
             if (profileError) throw profileError;
+
+            // Check if user is inactive
+            if (profile.status === 'inactive') {
+                await supabase.auth.signOut();
+                alert('Sua conta está inativa. Entre em contato com o administrador.');
+                setUser(null);
+                return;
+            }
 
             // Fetch user permissions based on role
             const { data: permissions, error: permError } = await supabase

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useAppSettings } from '../src/hooks/useAppSettings';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -10,6 +11,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, hasPermission, signOut } = useAuth();
+  const { appName, logoUrl, loading: settingsLoading } = useAppSettings();
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -26,7 +28,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     { path: '/register', icon: 'person_add', label: 'Cadastro', permission: 'edit_students', roles: ['ADMIN'] },
     { path: '/turmas', icon: 'groups', label: 'Turmas', permission: 'view_turmas', roles: ['ADMIN', 'TEACHER'] },
     { path: '/calendar', icon: 'calendar_month', label: 'Calendário', permission: 'view_calendar', roles: ['ADMIN', 'TEACHER'] },
-    { path: '/reports', icon: 'assessment', label: 'Relatórios', permission: 'view_reports', roles: ['ADMIN'] },
+    { path: '/reports', icon: 'assessment', label: 'Relatórios', permission: 'view_reports', roles: ['ADMIN', 'TEACHER'] },
     { path: '/attendance', icon: 'checklist', label: 'Chamada', permission: 'view_attendance', roles: ['TEACHER'] },
     { path: '/attendance-history', icon: 'history', label: 'Histórico', permission: 'view_history', roles: ['ADMIN', 'TEACHER'] },
     { path: '/admin/panel', icon: 'admin_panel_settings', label: 'Administração', permission: 'manage_permissions', roles: ['ADMIN'] },
@@ -43,8 +45,18 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       <aside className="fixed left-0 top-0 h-screen w-64 flex-col justify-between border-r border-border-light bg-card-light p-4 hidden lg:flex z-50">
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-3 p-2">
-            <span className="material-symbols-outlined text-primary text-4xl">skateboarding</span>
-            <h1 className="text-text-light text-lg font-bold">Skate School</h1>
+            {logoUrl ? (
+              <img 
+                src={logoUrl} 
+                alt={appName} 
+                className="w-10 h-10 object-contain"
+              />
+            ) : (
+              <span className="material-symbols-outlined text-primary text-4xl">skateboarding</span>
+            )}
+            <h1 className="text-text-light text-lg font-bold">
+              {settingsLoading ? 'Carregando...' : appName}
+            </h1>
           </div>
 
           <div className="flex items-center gap-3 mt-4 mb-2 p-2 bg-gray-50 rounded-lg">

@@ -1,5 +1,5 @@
 import { supabase } from '../../lib/supabase';
-import { Profile, Student, Class, Enrollment, Attendance, AttendanceStatus } from '../types/database';
+import { Profile, Student, Class, Enrollment, Attendance, AttendanceStatus, Notice, ContactLog, AppSettings } from '../types/database';
 
 export const api = {
     // Profiles
@@ -18,6 +18,7 @@ export const api = {
         const { data, error } = await supabase
             .from('students')
             .select('*')
+            .eq('status', 'active')
             .order('full_name');
         if (error) throw error;
         return data as Student[];
@@ -138,6 +139,77 @@ export const api = {
             .eq('student_id', studentId)
             .eq('class_id', classId);
         if (error) throw error;
+    },
+
+    // Teacher Dashboard
+    getNotices: async () => {
+        const { data, error } = await supabase
+            .from('notices')
+            .select('*')
+            .eq('active', true)
+            .order('created_at', { ascending: false });
+        if (error) throw error;
+        return data as Notice[];
+    },
+
+    getTeacherClasses: async (teacherId: string) => {
+        const { data, error } = await supabase
+            .from('classes')
+            .select('*, enrollments(count)')
+            .eq('teacher_id', teacherId);
+        
+        if (error) throw error;
+        
+        // Map the count correctly
+        return data.map(cls => ({
+            ...cls,
+            student_count: cls.enrollments?.[0]?.count || 0
+        })) as (Class & { student_count: number })[];
+    },
+
+    getTeacherStudents: async (teacherId: string) => {
+        // Get all classes for the teacher first
+        const { data: classes, error: classError } = await supabase
+            .from('classes')
+            .select('id')
+            .eq('teacher_id', teacherId);
+            
+        if (classError) throw classError;
+        const classIds = classes.map(c => c.id);
+        
+        if (classIds.length === 0) return [];
+
+        // Get students enrolled in these classes
+        const { data, error } = await supabase
+            .from('enrollments')
+            .select('student:students(*), class:classes(name, time)')
+            .in('class_id', classIds);
+            
+        if (error) throw error;
+        return data as { student: Student, class: { name: string, time: string } }[];
+    },
+
+    getTeacherAttendanceHistory: async (teacherId: string) => {
+        // Get classes first
+        const { data: classes, error: classError } = await supabase
+            .from('classes')
+            .select('id')
+            .eq('teacher_id', teacherId);
+
+        if (classError) throw classError;
+        const classIds = classes.map(c => c.id);
+
+        if (classIds.length === 0) return [];
+
+        // Get attendance for these classes
+        const { data, error } = await supabase
+            .from('attendance')
+            .select('*')
+            .in('class_id', classIds)
+            .order('date', { ascending: false });
+
+        if (error) throw error;
+        return data as Attendance[];
     },
 
     // Admin - User Management
@@ -281,5 +353,130 @@ export const api = {
             .delete()
             .eq('id', classId);
         if (error) throw error;
+    },
+
+    // Reports & Analytics
+    getAllStudentsWithAttendance: async (startDate?: string, endDate?: string) => {
+        const { data, error } = await supabase
+            .from('students')
+            .select(`
+                *,
+                enrollments!inner(
+                    class:classes(id, name, level, time)
+                )
+            `)
+            .eq('status', 'active');
+        
+        if (error) throw error;
+        return data;
+    },
+
+    getAttendanceForPeriod: async (startDate: string, endDate: string) => {
+        const { data, error } = await supabase
+            .from('attendance')
+            .select('*')
+            .gte('date', startDate)
+            .lte('date', endDate)
+            .order('date', { ascending: false });
+        
+        if (error) throw error;
+        return data as Attendance[];
+    },
+
+    inactivateStudent: async (studentId: string) => {
+        const { data, error } = await supabase
+            .from('students')
+            .update({ status: 'inactive', updated_at: new Date().toISOString() })
+            .eq('id', studentId)
+            .select()
+            .single();
+        
+        if (error) throw error;
+        return data as Student;
+    },
+
+    inactivateTeacher: async (teacherId: string) => {
+        const { data, error } = await supabase
+            .from('profiles')
+            .update({ status: 'inactive', updated_at: new Date().toISOString() })
+            .eq('id', teacherId)
+            .select()
+            .single();
+        
+        if (error) throw error;
+        return data as Profile;
+    },
+
+    activateTeacher: async (teacherId: string) => {
+        const { data, error } = await supabase
+            .from('profiles')
+            .update({ status: 'active', updated_at: new Date().toISOString() })
+            .eq('id', teacherId)
+            .select()
+            .single();
+        
+        if (error) throw error;
+        return data as Profile;
+    },
+
+    createContactLog: async (log: Omit<ContactLog, 'id' | 'created_at'>) => {
+        const { data, error } = await supabase
+            .from('contact_logs')
+            .insert(log)
+            .select()
+            .single();
+        
+        if (error) throw error;
+        return data as ContactLog;
+    },
+
+    getContactLogs: async (studentId: string) => {
+        const { data, error } = await supabase
+            .from('contact_logs')
+            .select('*, contacted_by_profile:profiles!contact_logs_contacted_by_fkey(full_name)')
+            .eq('student_id', studentId)
+            .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        return data;
+    },
+
+    // App Settings
+    getAppSettings: async () => {
+        const { data, error } = await supabase
+            .from('app_settings')
+            .select('*');
+        
+        if (error) throw error;
+        return data as AppSettings[];
+    },
+
+    getAppSetting: async (key: string) => {
+        const { data, error } = await supabase
+            .from('app_settings')
+            .select('*')
+            .eq('setting_key', key)
+            .single();
+        
+        if (error) throw error;
+        return data as AppSettings;
+    },
+
+    updateAppSetting: async (key: string, value: string) => {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        const { data, error } = await supabase
+            .from('app_settings')
+            .update({ 
+                setting_value: value,
+                updated_by: user?.id,
+                updated_at: new Date().toISOString()
+            })
+            .eq('setting_key', key)
+            .select()
+            .single();
+        
+        if (error) throw error;
+        return data as AppSettings;
     }
 };

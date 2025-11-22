@@ -32,6 +32,7 @@ export const Attendance: React.FC = () => {
   const { user } = useAuth();
   const classId = searchParams.get('classId');
   const dateParam = searchParams.get('date');
+  const shouldCancel = searchParams.get('cancel') === 'true';
 
   const [selectedClass, setSelectedClass] = useState<Class | null>(null);
   const [classes, setClasses] = useState<Class[]>([]);
@@ -64,6 +65,13 @@ export const Attendance: React.FC = () => {
       loadClassData(classId);
     }
   }, [classId]);
+
+  // Open cancel modal if shouldCancel parameter is present
+  useEffect(() => {
+    if (shouldCancel && selectedClass) {
+      setShowCancelModal(true);
+    }
+  }, [shouldCancel, selectedClass]);
 
   const fetchClasses = async () => {
     try {
@@ -149,6 +157,14 @@ export const Attendance: React.FC = () => {
 
       if (error) throw error;
 
+      console.log('🔍 Dados carregados da attendance:', {
+        classId,
+        date: dateStr,
+        recordCount: data?.length || 0,
+        firstRecord: data?.[0],
+        isCancelled: data?.[0]?.is_cancelled
+      });
+
       // Resetar estados
       setIsCancelled(false);
       setCancelReason('');
@@ -164,6 +180,9 @@ export const Attendance: React.FC = () => {
         if (data[0].is_cancelled) {
           setIsCancelled(true);
           setCancelReason(data[0].cancelled_reason || '');
+          console.log('✅ Aula marcada como cancelada:', {
+            reason: data[0].cancelled_reason
+          });
         }
 
         // Verificar permissões
@@ -233,7 +252,7 @@ export const Attendance: React.FC = () => {
     });
   };
 
-  const handleSaveAttendance = async () => {
+  const handleSaveAttendance = async (forceCancelled?: boolean) => {
     if (!selectedClass || !user) {
       alert('Erro: Usuário não autenticado ou turma não selecionada');
       return;
@@ -247,6 +266,9 @@ export const Attendance: React.FC = () => {
     setSaving(true);
     try {
       const dateStr = selectedDate.toISOString().split('T')[0];
+      
+      // Use forceCancelled se fornecido, senão usa o estado
+      const isThisCancelled = forceCancelled !== undefined ? forceCancelled : isCancelled;
 
       // Preparar registros de presença
       // Se cancelada, salvamos um registro para cada aluno com status null ou mantemos o status mas marcamos is_cancelled
@@ -254,9 +276,10 @@ export const Attendance: React.FC = () => {
 
       const attendanceRecords = students.map(student => {
         const record = attendance.get(student.id);
-        // Definir tipos explicitamente para evitar erro de 'unknown'
-        const status: 'present' | 'absent' | 'justified' = isCancelled ? 'present' : (record?.status || 'present');
-        const justification: string | null = isCancelled ? null : (record?.justification || null);
+        // Quando cancelada, marcar como 'absent' pois a aula não aconteceu
+        // Mas o importante é a flag is_cancelled
+        const status: 'present' | 'absent' | 'justified' = isThisCancelled ? 'absent' : (record?.status || 'present');
+        const justification: string | null = isThisCancelled ? null : (record?.justification || null);
 
         return {
           class_id: selectedClass.id,
@@ -264,28 +287,35 @@ export const Attendance: React.FC = () => {
           date: dateStr,
           status: status,
           justification: justification,
-          is_cancelled: isCancelled,
-          cancelled_reason: isCancelled ? cancelReason : null,
+          is_cancelled: isThisCancelled,
+          cancelled_reason: isThisCancelled ? cancelReason : null,
           created_by: user.id
         };
       });
 
-      // Vamos usar upsert. Para isso precisamos garantir que a constraint de unicidade (student_id, class_id, date) exista.
-      // O Supabase/Postgres deve ter essa constraint criada.
+      console.log('🔍 Salvando chamada:', {
+        isCancelled: isThisCancelled,
+        cancelReason,
+        totalRecords: attendanceRecords.length,
+        sampleRecord: attendanceRecords[0]
+      });
 
-      // Primeiro, vamos buscar os IDs dos registros existentes para fazer update corretamente se necessário
-      // Ou podemos confiar no ON CONFLICT se a constraint existir.
-
-      const { error } = await supabase
+      const { error, data } = await supabase
         .from('attendance')
         .upsert(attendanceRecords, {
           onConflict: 'student_id,class_id,date',
           ignoreDuplicates: false
-        });
+        })
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erro ao salvar:', error);
+        throw error;
+      }
 
-      alert('Chamada salva com sucesso!');
+      console.log('✅ Dados salvos:', data);
+
+      alert(isThisCancelled ? 'Aula cancelada com sucesso!' : 'Chamada salva com sucesso!');
 
       // Forçar recarregamento dos dados
       await loadExistingAttendance(selectedClass.id, selectedDate);
@@ -577,7 +607,7 @@ export const Attendance: React.FC = () => {
               <button
                 onClick={() => {
                   setIsCancelled(true);
-                  handleSaveAttendance(); // Salva imediatamente ao confirmar
+                  handleSaveAttendance(true); // Força is_cancelled = true
                 }}
                 className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
               >

@@ -30,10 +30,10 @@ export const Login: React.FC = () => {
         });
         if (error) throw error;
 
-        // Fetch user's role from profiles table
+        // Fetch user's role and status from profiles table
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select('role')
+          .select('role, status')
           .eq('id', authData.user.id)
           .single();
 
@@ -41,6 +41,13 @@ export const Login: React.FC = () => {
           console.error('Error fetching profile:', profileError);
           navigate('/admin/dashboard'); // Fallback to admin dashboard
         } else {
+          // Check if user is inactive
+          if (profile.status === 'inactive') {
+            await supabase.auth.signOut();
+            setError('Sua conta está inativa. Entre em contato com o administrador.');
+            return;
+          }
+
           // Redirect based on role
           if (profile.role === 'TEACHER') {
             navigate('/teacher/dashboard');

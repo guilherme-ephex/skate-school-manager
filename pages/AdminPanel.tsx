@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../src/lib/api';
 import { Profile, AuditLog } from '../src/types/database';
 import { PermissionsManagement } from './PermissionsManagement';
+import { AppSettings } from './AppSettings';
 
 export const AdminPanel: React.FC = () => {
-    const [activeTab, setActiveTab] = useState<'users' | 'audit' | 'permissions'>('users');
+    const [activeTab, setActiveTab] = useState<'users' | 'audit' | 'permissions' | 'settings'>('users');
     const [users, setUsers] = useState<Profile[]>([]);
     const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
     const [loading, setLoading] = useState(true);
@@ -37,9 +38,10 @@ export const AdminPanel: React.FC = () => {
     useEffect(() => {
         if (activeTab === 'users') {
             fetchUsers();
-        } else {
+        } else if (activeTab === 'audit') {
             fetchAuditLogs();
         }
+        // permissions and settings tabs don't need data fetching
     }, [activeTab]);
 
     const fetchUsers = async () => {
@@ -213,6 +215,36 @@ export const AdminPanel: React.FC = () => {
         }).format(date);
     };
 
+    const handleInactivateTeacher = async (teacher: Profile) => {
+        if (!window.confirm(`Tem certeza que deseja INATIVAR o professor "${teacher.full_name}"? Ele não poderá mais fazer login no sistema.`)) {
+            return;
+        }
+
+        try {
+            await api.inactivateTeacher(teacher.id);
+            alert('Professor inativado com sucesso!');
+            fetchUsers();
+        } catch (err) {
+            console.error('Error inactivating teacher:', err);
+            alert('Erro ao inativar professor. Tente novamente.');
+        }
+    };
+
+    const handleActivateTeacher = async (teacher: Profile) => {
+        if (!window.confirm(`Tem certeza que deseja ATIVAR o professor "${teacher.full_name}"? Ele poderá fazer login novamente no sistema.`)) {
+            return;
+        }
+
+        try {
+            await api.activateTeacher(teacher.id);
+            alert('Professor ativado com sucesso!');
+            fetchUsers();
+        } catch (err) {
+            console.error('Error activating teacher:', err);
+            alert('Erro ao ativar professor. Tente novamente.');
+        }
+    };
+
     const filteredLogs = auditLogs.filter(log => {
         const actionMatch = filterAction === 'all' || log.action === filterAction;
         const entityMatch = filterEntity === 'all' || log.entity_type === filterEntity;
@@ -261,6 +293,16 @@ export const AdminPanel: React.FC = () => {
                     <span className="material-symbols-outlined">lock</span>
                     Permissões
                 </button>
+                <button
+                    onClick={() => setActiveTab('settings')}
+                    className={`pb-4 px-2 font-bold flex items-center gap-2 transition-colors ${activeTab === 'settings'
+                        ? 'text-primary border-b-2 border-primary'
+                        : 'text-gray-500 hover:text-gray-700'
+                        }`}
+                >
+                    <span className="material-symbols-outlined">settings</span>
+                    Configurações
+                </button>
             </div>
 
             {/* Users Tab */}
@@ -291,6 +333,7 @@ export const AdminPanel: React.FC = () => {
                                     <tr>
                                         <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Usuário</th>
                                         <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Função</th>
+                                        <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Status</th>
                                         <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Telefone</th>
                                         <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Especialidade</th>
                                         <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Cadastro</th>
@@ -339,6 +382,41 @@ export const AdminPanel: React.FC = () => {
                                                     <option value="ADMIN">Administrador</option>
                                                 </select>
                                             </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="flex items-center gap-3">
+                                                    {/* Toggle Switch */}
+                                                    <button
+                                                        onClick={() => {
+                                                            if (user.status === 'inactive') {
+                                                                handleActivateTeacher(user);
+                                                            } else {
+                                                                handleInactivateTeacher(user);
+                                                            }
+                                                        }}
+                                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                                                            user.status === 'inactive' 
+                                                                ? 'bg-gray-300 hover:bg-gray-400 focus:ring-gray-500' 
+                                                                : 'bg-green-500 hover:bg-green-600 focus:ring-green-500'
+                                                        }`}
+                                                        title={user.status === 'inactive' ? 'Clique para ativar' : 'Clique para desativar'}
+                                                    >
+                                                        <span
+                                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow-sm ${
+                                                                user.status === 'inactive' ? 'translate-x-1' : 'translate-x-6'
+                                                            }`}
+                                                        />
+                                                    </button>
+                                                    
+                                                    {/* Status Label */}
+                                                    <span className={`text-xs font-bold ${
+                                                        user.status === 'inactive' 
+                                                            ? 'text-red-600' 
+                                                            : 'text-green-600'
+                                                    }`}>
+                                                        {user.status === 'inactive' ? 'Inativo' : 'Ativo'}
+                                                    </span>
+                                                </div>
+                                            </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                                 {user.phone || '-'}
                                             </td>
@@ -357,6 +435,7 @@ export const AdminPanel: React.FC = () => {
                                                     >
                                                         <span className="material-symbols-outlined text-base">edit</span>
                                                     </button>
+                                                    
                                                     <button
                                                         onClick={() => confirmDelete(user)}
                                                         className="text-red-600 hover:text-red-800 transition-colors"
@@ -481,6 +560,11 @@ export const AdminPanel: React.FC = () => {
             {/* Permissions Tab */}
             {activeTab === 'permissions' && (
                 <PermissionsManagement />
+            )}
+
+            {/* Settings Tab */}
+            {activeTab === 'settings' && (
+                <AppSettings />
             )}
 
             {/* Create User Modal */}
