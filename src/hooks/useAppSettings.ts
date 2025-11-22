@@ -4,6 +4,7 @@ import { api } from '../lib/api';
 interface AppSettingsData {
     appName: string;
     logoUrl: string;
+    logoDarkUrl: string;
     faviconUrl: string;
     loading: boolean;
 }
@@ -11,6 +12,7 @@ interface AppSettingsData {
 export function useAppSettings(): AppSettingsData {
     const [appName, setAppName] = useState('Skate School Manager');
     const [logoUrl, setLogoUrl] = useState('');
+    const [logoDarkUrl, setLogoDarkUrl] = useState('');
     const [faviconUrl, setFaviconUrl] = useState('');
     const [loading, setLoading] = useState(true);
 
@@ -24,6 +26,7 @@ export function useAppSettings(): AppSettingsData {
 
             const nameSettings = settings.find(s => s.setting_key === 'app_name');
             const logoSettings = settings.find(s => s.setting_key === 'app_logo_url');
+            const logoDarkSettings = settings.find(s => s.setting_key === 'app_logo_dark_url');
             const faviconSettings = settings.find(s => s.setting_key === 'app_favicon_url');
 
             if (nameSettings?.setting_value) {
@@ -31,6 +34,9 @@ export function useAppSettings(): AppSettingsData {
             }
             if (logoSettings?.setting_value) {
                 setLogoUrl(logoSettings.setting_value);
+            }
+            if (logoDarkSettings?.setting_value) {
+                setLogoDarkUrl(logoDarkSettings.setting_value);
             }
             if (faviconSettings?.setting_value) {
                 setFaviconUrl(faviconSettings.setting_value);
@@ -43,6 +49,6 @@ export function useAppSettings(): AppSettingsData {
         }
     };
 
-    return { appName, logoUrl, faviconUrl, loading };
+    return { appName, logoUrl, logoDarkUrl, faviconUrl, loading };
 }
 

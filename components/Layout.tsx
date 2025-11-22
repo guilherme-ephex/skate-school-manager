@@ -14,7 +14,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const { user, hasPermission, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const { appName, logoUrl, loading: settingsLoading } = useAppSettings();
+  const { appName, logoUrl, logoDarkUrl, loading: settingsLoading } = useAppSettings();
+  
+  // Select logo based on current theme
+  const currentLogo = theme === 'dark' && logoDarkUrl ? logoDarkUrl : logoUrl;
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -52,9 +55,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       <aside className="fixed left-0 top-0 h-screen w-64 flex-col justify-between border-r border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark p-4 hidden lg:flex z-50 transition-colors">
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-3 p-2">
-            {logoUrl ? (
+            {currentLogo ? (
               <img
-                src={logoUrl}
+                src={currentLogo}
                 alt={appName}
                 className="w-10 h-10 object-contain"
               />
@@ -162,9 +165,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between p-2">
               <div className="flex items-center gap-3">
-                {logoUrl ? (
+                {currentLogo ? (
                   <img
-                    src={logoUrl}
+                    src={currentLogo}
                     alt={appName}
                     className="w-8 h-8 object-contain"
                   />

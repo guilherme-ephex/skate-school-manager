@@ -8,8 +8,10 @@ export const AppSettings: React.FC = () => {
     const [saving, setSaving] = useState(false);
     const [appName, setAppName] = useState('Skate School Manager');
     const [logoUrl, setLogoUrl] = useState<string>('');
+    const [logoDarkUrl, setLogoDarkUrl] = useState<string>('');
     const [faviconUrl, setFaviconUrl] = useState<string>('');
     const [uploadingLogo, setUploadingLogo] = useState(false);
+    const [uploadingLogoDark, setUploadingLogoDark] = useState(false);
     const [uploadingFavicon, setUploadingFavicon] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
 
@@ -24,6 +26,7 @@ export const AppSettings: React.FC = () => {
 
             const nameSettings = settings.find(s => s.setting_key === 'app_name');
             const logoSettings = settings.find(s => s.setting_key === 'app_logo_url');
+            const logoDarkSettings = settings.find(s => s.setting_key === 'app_logo_dark_url');
             const faviconSettings = settings.find(s => s.setting_key === 'app_favicon_url');
 
             if (nameSettings?.setting_value) {
@@ -31,6 +34,9 @@ export const AppSettings: React.FC = () => {
             }
             if (logoSettings?.setting_value) {
                 setLogoUrl(logoSettings.setting_value);
+            }
+            if (logoDarkSettings?.setting_value) {
+                setLogoDarkUrl(logoDarkSettings.setting_value);
             }
             if (faviconSettings?.setting_value) {
                 setFaviconUrl(faviconSettings.setting_value);
@@ -51,6 +57,7 @@ export const AppSettings: React.FC = () => {
             await Promise.all([
                 api.updateAppSetting('app_name', appName),
                 api.updateAppSetting('app_logo_url', logoUrl),
+                api.updateAppSetting('app_logo_dark_url', logoDarkUrl),
                 api.updateAppSetting('app_favicon_url', faviconUrl),
             ]);
 
@@ -117,6 +124,58 @@ export const AppSettings: React.FC = () => {
 
     const handleRemoveLogo = () => {
         setLogoUrl('');
+    };
+
+    const handleLogoDarkUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            alert('Por favor, selecione uma imagem válida');
+            return;
+        }
+
+        // Validate file size (max 2MB)
+        if (file.size > 2 * 1024 * 1024) {
+            alert('A imagem deve ter no máximo 2MB');
+            return;
+        }
+
+        try {
+            setUploadingLogoDark(true);
+
+            // Generate unique file name
+            const fileExt = file.name.split('.').pop();
+            const fileName = `logo-dark-${Date.now()}.${fileExt}`;
+            const filePath = `logos/${fileName}`;
+
+            // Upload to Supabase Storage
+            const { data, error } = await supabase.storage
+                .from('public')
+                .upload(filePath, file, {
+                    cacheControl: '3600',
+                    upsert: false
+                });
+
+            if (error) throw error;
+
+            // Get public URL
+            const { data: urlData } = supabase.storage
+                .from('public')
+                .getPublicUrl(filePath);
+
+            setLogoDarkUrl(urlData.publicUrl);
+        } catch (err) {
+            console.error('Error uploading dark logo:', err);
+            alert('Erro ao fazer upload da logo escura. Tente novamente.');
+        } finally {
+            setUploadingLogoDark(false);
+        }
+    };
+
+    const handleRemoveLogoDark = () => {
+        setLogoDarkUrl('');
     };
 
     const handleFaviconUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -209,23 +268,25 @@ export const AppSettings: React.FC = () => {
                     </p>
                 </div>
 
-                {/* Logo Section */}
+                {/* Logo Section - Light Theme */}
                 <div>
                     <label className="block text-sm font-bold text-text-light dark:text-text-dark mb-2">
-                        Logomarca do Aplicativo
+                        Logomarca do Aplicativo (Tema Claro)
                     </label>
 
                     <div className="space-y-4">
                         {/* Logo Preview */}
                         {logoUrl ? (
                             <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-border-light dark:border-border-dark">
-                                <img
-                                    src={logoUrl}
-                                    alt="Logo do aplicativo"
-                                    className="w-20 h-20 object-contain rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-card-dark"
-                                />
+                                <div className="p-2 bg-white rounded-lg">
+                                    <img
+                                        src={logoUrl}
+                                        alt="Logo tema claro"
+                                        className="w-20 h-20 object-contain"
+                                    />
+                                </div>
                                 <div className="flex-grow">
-                                    <p className="text-sm font-bold text-text-light dark:text-text-dark">Logo atual</p>
+                                    <p className="text-sm font-bold text-text-light dark:text-text-dark">Logo tema claro</p>
                                     <p className="text-xs text-muted dark:text-muted-dark mt-1">Dimensões recomendadas: 200x200px</p>
                                 </div>
                                 <button
@@ -267,7 +328,7 @@ export const AppSettings: React.FC = () => {
                                 ) : (
                                     <>
                                         <span className="material-symbols-outlined">upload</span>
-                                        {logoUrl ? 'Alterar Logo' : 'Fazer Upload da Logo'}
+                                        {logoUrl ? 'Alterar Logo Claro' : 'Fazer Upload da Logo (Tema Claro)'}
                                     </>
                                 )}
                             </label>
@@ -275,6 +336,78 @@ export const AppSettings: React.FC = () => {
 
                         <p className="text-xs text-muted dark:text-muted-dark">
                             Formatos aceitos: PNG, JPG, SVG. Tamanho máximo: 2MB.
+                        </p>
+                    </div>
+                </div>
+
+                {/* Logo Section - Dark Theme */}
+                <div>
+                    <label className="block text-sm font-bold text-text-light dark:text-text-dark mb-2">
+                        Logomarca do Aplicativo (Tema Escuro)
+                    </label>
+
+                    <div className="space-y-4">
+                        {/* Dark Logo Preview */}
+                        {logoDarkUrl ? (
+                            <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-border-light dark:border-border-dark">
+                                <div className="p-2 bg-gray-900 rounded-lg">
+                                    <img
+                                        src={logoDarkUrl}
+                                        alt="Logo tema escuro"
+                                        className="w-20 h-20 object-contain"
+                                    />
+                                </div>
+                                <div className="flex-grow">
+                                    <p className="text-sm font-bold text-text-light dark:text-text-dark">Logo tema escuro</p>
+                                    <p className="text-xs text-muted dark:text-muted-dark mt-1">Dimensões recomendadas: 200x200px</p>
+                                </div>
+                                <button
+                                    onClick={handleRemoveLogoDark}
+                                    className="px-4 py-2 text-red-600 border border-red-300 rounded-lg hover:bg-red-50 font-bold text-sm transition-colors"
+                                >
+                                    Remover
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="flex items-center justify-center p-8 bg-gray-50 dark:bg-gray-800 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600">
+                                <div className="text-center">
+                                    <span className="material-symbols-outlined text-4xl text-muted dark:text-muted-dark mb-2">image</span>
+                                    <p className="text-sm text-muted dark:text-muted-dark">Nenhuma logo escura configurada</p>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Upload Button */}
+                        <div className="relative">
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={handleLogoDarkUpload}
+                                disabled={uploadingLogoDark}
+                                className="hidden"
+                                id="logo-dark-upload"
+                            />
+                            <label
+                                htmlFor="logo-dark-upload"
+                                className={`flex items-center justify-center gap-2 w-full px-4 py-3 bg-white border-2 border-primary text-primary rounded-lg font-bold hover:bg-primary hover:text-white transition-colors cursor-pointer ${uploadingLogoDark ? 'opacity-50 cursor-not-allowed' : ''
+                                    }`}
+                            >
+                                {uploadingLogoDark ? (
+                                    <>
+                                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
+                                        Fazendo upload...
+                                    </>
+                                ) : (
+                                    <>
+                                        <span className="material-symbols-outlined">upload</span>
+                                        {logoDarkUrl ? 'Alterar Logo Escura' : 'Fazer Upload da Logo (Tema Escuro)'}
+                                    </>
+                                )}
+                            </label>
+                        </div>
+
+                        <p className="text-xs text-muted dark:text-muted-dark">
+                            Formatos aceitos: PNG, JPG, SVG. Tamanho máximo: 2MB. Use uma logo com cores claras para melhor visibilidade no tema escuro.
                         </p>
                     </div>
                 </div>
