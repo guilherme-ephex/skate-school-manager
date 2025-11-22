@@ -71,13 +71,13 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-blue-500 via-blue-600 to-primary dark:from-background-dark dark:via-background-dark dark:to-background-dark flex items-center justify-center p-4 transition-all relative overflow-hidden">
+    <div className="min-h-screen w-full bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 dark:from-background-dark dark:via-background-dark dark:to-background-dark flex items-center justify-center p-4 transition-all relative overflow-hidden">
       {/* Decorative Elements - Light Theme Only */}
       {theme === 'light' && (
         <>
-          <div className="absolute top-0 left-0 w-72 h-72 bg-blue-400/20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
-          <div className="absolute bottom-0 right-0 w-96 h-96 bg-primary/20 rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
-          <div className="absolute top-1/2 left-1/4 w-48 h-48 bg-blue-300/10 rounded-full blur-2xl"></div>
+          <div className="absolute top-0 left-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
+          <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-primary/8 rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
+          <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-gray-300/30 rounded-full blur-3xl"></div>
         </>
       )}
 
@@ -100,9 +100,9 @@ export const Login: React.FC = () => {
       </button>
 
       <div className="w-full max-w-md flex flex-col items-center relative z-10">
-        <div className={`flex items-center gap-3 mb-8 ${theme === 'light' ? 'text-white' : ''}`}>
+        <div className="flex items-center gap-3 mb-8">
           {currentLogo ? (
-            <div className={`p-2 rounded-xl ${theme === 'light' ? 'bg-white/20 backdrop-blur-sm' : ''}`}>
+            <div className={`p-2 rounded-xl ${theme === 'light' ? 'bg-white shadow-sm' : ''}`}>
               <img
                 src={currentLogo}
                 alt={appName}
@@ -110,20 +110,20 @@ export const Login: React.FC = () => {
               />
             </div>
           ) : (
-            <span className={`material-symbols-outlined text-5xl ${theme === 'light' ? 'text-white' : 'text-primary dark:text-white'}`}>skateboarding</span>
+            <span className={`material-symbols-outlined text-5xl ${theme === 'light' ? 'text-primary' : 'text-primary dark:text-white'}`}>skateboarding</span>
           )}
-          <h1 className={`text-3xl font-bold ${theme === 'light' ? 'text-white drop-shadow-lg' : 'text-primary dark:text-white'}`}>
+          <h1 className={`text-3xl font-bold ${theme === 'light' ? 'text-gray-800' : 'text-primary dark:text-white'}`}>
             {settingsLoading ? 'Carregando...' : appName}
           </h1>
         </div>
 
-        <h2 className={`text-2xl font-bold mb-6 ${theme === 'light' ? 'text-white drop-shadow-md' : 'text-text-light dark:text-white'}`}>
+        <h2 className={`text-2xl font-bold mb-6 ${theme === 'light' ? 'text-gray-700' : 'text-text-light dark:text-white'}`}>
           {isSignUp ? 'Crie sua conta' : 'Bem-vindo de volta!'}
         </h2>
 
         <div className={`w-full rounded-2xl p-6 sm:p-8 shadow-2xl border transition-all ${
           theme === 'light' 
-            ? 'bg-white/95 backdrop-blur-md border-white/30' 
+            ? 'bg-white border-gray-200' 
             : 'bg-white/5 dark:backdrop-blur-sm border-white/10'
         }`}>
           {/* Google Login - Placeholder for now */}
@@ -205,7 +205,7 @@ export const Login: React.FC = () => {
               disabled={loading}
               className={`w-full h-12 rounded-lg font-bold transition-all mt-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] ${
                 theme === 'light' 
-                  ? 'bg-gradient-to-r from-blue-600 to-primary text-white hover:from-blue-700 hover:to-primary/90' 
+                  ? 'bg-primary text-white hover:bg-primary/90' 
                   : 'bg-[#0f3c5c] text-white hover:bg-[#0A283D]'
               }`}
             >
