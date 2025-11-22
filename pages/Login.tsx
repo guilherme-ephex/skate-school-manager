@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { useAppSettings } from '../src/hooks/useAppSettings';
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
+  const { appName, logoUrl, loading: settingsLoading } = useAppSettings();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -64,18 +66,26 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#1A2B4C] dark:bg-background-dark flex items-center justify-center p-4 transition-colors">
+    <div className="min-h-screen w-full bg-white dark:bg-background-dark flex items-center justify-center p-4 transition-colors">
       <div className="w-full max-w-md flex flex-col items-center">
         <div className="flex items-center gap-3 mb-8">
-          <span className="material-symbols-outlined text-white text-5xl">skateboarding</span>
-          <h1 className="text-white text-3xl font-bold">Skate School</h1>
+          {logoUrl ? (
+            <img
+              src={logoUrl}
+              alt={appName}
+              className="w-12 h-12 object-contain"
+            />
+          ) : (
+            <span className="material-symbols-outlined text-primary dark:text-white text-5xl">skateboarding</span>
+          )}
+          <h1 className="text-primary dark:text-white text-3xl font-bold">{settingsLoading ? 'Carregando...' : appName}</h1>
         </div>
 
-        <h2 className="text-white text-2xl font-bold mb-6">
+        <h2 className="text-text-light dark:text-white text-2xl font-bold mb-6">
           {isSignUp ? 'Crie sua conta' : 'Bem-vindo de volta!'}
         </h2>
 
-        <div className="w-full bg-white/5 backdrop-blur-sm rounded-xl p-6 sm:p-8 shadow-2xl border border-white/10">
+        <div className="w-full bg-card-light dark:bg-white/5 dark:backdrop-blur-sm rounded-xl p-6 sm:p-8 shadow-2xl border border-border-light dark:border-white/10">
           {/* Google Login - Placeholder for now */}
           <button className="flex items-center justify-center w-full bg-white text-gray-900 h-12 rounded-lg text-sm font-bold hover:bg-gray-100 dark:bg-gray-700 transition-colors mb-6 gap-2 opacity-50 cursor-not-allowed" disabled>
             <img
@@ -100,7 +110,7 @@ export const Login: React.FC = () => {
 
           <form onSubmit={handleAuth} className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
-              <label className="text-white text-sm font-medium">Email</label>
+              <label className="text-text-light dark:text-white text-sm font-medium">Email</label>
               <input
                 type="email"
                 value={email}
@@ -111,7 +121,7 @@ export const Login: React.FC = () => {
               />
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-white text-sm font-medium">Senha</label>
+              <label className="text-text-light dark:text-white text-sm font-medium">Senha</label>
               <div className="relative">
                 <input
                   type="password"

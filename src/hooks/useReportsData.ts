@@ -87,7 +87,17 @@ export const useReportsData = (selectedMonth: Date) => {
                 const studentsData = await api.getAllStudentsWithAttendance();
                 
                 // Fetch all classes (for expected classes calculation)
-                const { data: allClasses } = await supabase.from('classes').select('*');
+                const { data: allClasses, error: classesError } = await supabase.from('classes').select('*');
+                const classNames = new Map<string, string>();
+                
+                if (classesError) {
+                    console.error('Error fetching classes:', classesError);
+                } else {
+                    // Populate class names map immediately
+                    if (allClasses) {
+                        allClasses.forEach(c => classNames.set(c.id, c.name));
+                    }
+                }
                 
                 // Fetch ALL attendance (for consecutive absences - full history)
                 const { data: allAttendance, error: allAttendanceError } = await supabase
@@ -272,11 +282,9 @@ export const useReportsData = (selectedMonth: Date) => {
 
                 // 1. Expected Classes
                 let expectedCount = 0;
-                const classNames = new Map<string, string>();
+                // classNames is already populated above
                 
                 if (allClasses) {
-                    allClasses.forEach(c => classNames.set(c.id, c.name));
-                    
                     const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
                     
                     allClasses.forEach(cls => {

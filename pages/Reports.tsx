@@ -398,7 +398,7 @@ export const Reports: React.FC = () => {
                     <div className="mb-6 relative z-10">
                         <div className="flex items-center gap-3 mb-2">
                             <div className="w-10 h-10 bg-white dark:bg-card-dark/20 rounded-lg flex items-center justify-center">
-                                <span className="material-symbols-outlined text-xl">file_save</span>
+                                <span className="material-symbols-outlined text-xl text-primary dark:text-white">file_save</span>
                             </div>
                             <h2 className="text-xl font-bold">Exportar Relatório</h2>
                         </div>
